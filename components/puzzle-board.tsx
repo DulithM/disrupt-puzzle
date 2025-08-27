@@ -12,7 +12,7 @@ export function PuzzleBoard({ puzzle }: PuzzleBoardProps) {
   const { rows, cols, pieces } = puzzle
 
   return (
-    <div className="w-full h-screen p-4">
+    <div className="w-full h-[calc(100vh-120px)] sm:h-screen p-2 sm:p-4">
       <div
         className="w-full h-full grid gap-0 bg-muted rounded-lg border border-border/20"
         style={{
@@ -47,8 +47,8 @@ export function PuzzleBoard({ puzzle }: PuzzleBoardProps) {
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-white p-1">
                     <QRCode
-                      value={`${window.location.origin}/piece/${piece.id}`}
-                      size={Math.min(120, window.innerWidth / cols - 20)}
+                      value={`${typeof window !== 'undefined' ? window.location.origin : ''}/piece/${piece.id}`}
+                      size={Math.min(80, Math.min(window.innerWidth / cols - 10, window.innerHeight / rows - 10))}
                       className="w-full h-full object-contain"
                     />
                   </div>

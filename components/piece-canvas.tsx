@@ -30,13 +30,13 @@ export function PieceCanvas({ piece, puzzle }: PieceCanvasProps) {
 
         {/* Piece position indicator */}
         <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full font-mono">
-          {piece.row},{piece.col}
+          {piece.row + 1},{piece.col + 1}
         </div>
 
         {/* Completion overlay */}
         {piece.isPlaced && (
           <div className="absolute inset-0 bg-green-500/10 rounded-lg flex items-center justify-center">
-            <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">✓ Completed</div>
+            <div className="bg-green-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">✓ Completed</div>
           </div>
         )}
       </div>
@@ -44,7 +44,7 @@ export function PieceCanvas({ piece, puzzle }: PieceCanvasProps) {
       {/* Context preview */}
       <div className="mt-4">
         <h3 className="text-sm font-medium mb-2">Position in Puzzle</h3>
-        <div className="bg-muted p-3 rounded-lg">
+        <div className="bg-muted p-2 sm:p-3 rounded-lg">
           <div
             className="grid gap-px bg-border rounded"
             style={{

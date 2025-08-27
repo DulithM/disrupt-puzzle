@@ -93,8 +93,8 @@ export default function QRCodesPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
+      <div className="container mx-auto px-4 py-4 sm:py-8">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
           <Button variant="ghost" onClick={() => router.push("/")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Main Puzzle
@@ -109,88 +109,90 @@ export default function QRCodesPage() {
             {isResetting ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                Resetting...
+                <span className="hidden sm:inline">Resetting...</span>
+                <span className="sm:hidden">Reset</span>
               </>
             ) : (
               <>
                 <RotateCcw className="w-4 h-4 mr-2" />
-                Reset Puzzle
+                <span className="hidden sm:inline">Reset Puzzle</span>
+                <span className="sm:hidden">Reset</span>
               </>
             )}
           </Button>
         </div>
 
         {/* Header Section */}
-        <div className="mb-8">
-          <div className="text-center mb-6">
-            <h1 className="text-4xl font-bold mb-2">Scan & Play</h1>
-            <p className="text-xl text-muted-foreground mb-4">
+        <div className="mb-6 sm:mb-8">
+          <div className="text-center mb-4 sm:mb-6">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2">Scan & Play</h1>
+            <p className="text-lg sm:text-xl text-muted-foreground mb-4">
               Scan QR codes to unlock puzzle pieces through mini-games
             </p>
             
             {/* Progress Overview */}
-            <div className="inline-flex items-center gap-4 bg-muted/50 rounded-lg p-4 mb-6">
+            <div className="inline-flex items-center gap-2 sm:gap-4 bg-muted/50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{completedPieces}</div>
-                <div className="text-sm text-muted-foreground">Completed</div>
+                <div className="text-xl sm:text-2xl font-bold text-primary">{completedPieces}</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Completed</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold">{totalPieces}</div>
-                <div className="text-sm text-muted-foreground">Total Pieces</div>
+                <div className="text-xl sm:text-2xl font-bold">{totalPieces}</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Total Pieces</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{completionPercentage}%</div>
-                <div className="text-sm text-muted-foreground">Complete</div>
+                <div className="text-xl sm:text-2xl font-bold text-green-600">{completionPercentage}%</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Complete</div>
               </div>
             </div>
           </div>
 
           {/* How It Works */}
-          <Card className="mb-8 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+          <Card className="mb-6 sm:mb-8 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                 <Smartphone className="w-5 h-5 text-blue-600" />
                 How to Play
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm sm:text-base">
                 Follow these steps to contribute to the collaborative puzzle
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 <div className="text-center space-y-2">
-                  <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto">
-                    <QrCode className="w-6 h-6" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto">
+                    <QrCode className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
-                  <h4 className="font-semibold">1. Scan QR Code</h4>
-                  <p className="text-sm text-muted-foreground">
+                  <h4 className="font-semibold text-sm sm:text-base">1. Scan QR Code</h4>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Use your phone to scan any QR code below
                   </p>
                 </div>
                 <div className="text-center space-y-2">
-                  <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
-                    <Target className="w-6 h-6" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
+                    <Target className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
-                  <h4 className="font-semibold">2. Play Mini-Game</h4>
-                  <p className="text-sm text-muted-foreground">
+                  <h4 className="font-semibold text-sm sm:text-base">2. Play Mini-Game</h4>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Complete the puzzle challenge to unlock the piece
                   </p>
                 </div>
                 <div className="text-center space-y-2">
-                  <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto">
-                    <Trophy className="w-6 h-6" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto">
+                    <Trophy className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
-                  <h4 className="font-semibold">3. Claim Piece</h4>
-                  <p className="text-sm text-muted-foreground">
+                  <h4 className="font-semibold text-sm sm:text-base">3. Claim Piece</h4>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Enter your name to claim the completed piece
                   </p>
                 </div>
                 <div className="text-center space-y-2">
-                  <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto">
                     <span className="text-lg font-bold">✓</span>
                   </div>
-                  <h4 className="font-semibold">4. See Progress</h4>
-                  <p className="text-sm text-muted-foreground">
+                  <h4 className="font-semibold text-sm sm:text-base">4. See Progress</h4>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Your piece appears on the main puzzle board
                   </p>
                 </div>

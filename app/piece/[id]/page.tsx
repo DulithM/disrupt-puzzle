@@ -122,20 +122,20 @@ export default function PiecePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-4 sm:py-8 max-w-6xl">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <Button variant="ghost" onClick={() => router.push("/")} className="mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Main Puzzle
           </Button>
 
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-balance">
+              <h1 className="text-2xl sm:text-3xl font-bold text-balance">
                 Puzzle Piece ({piece.row + 1}, {piece.col + 1})
               </h1>
-              <p className="text-muted-foreground text-pretty">From "{puzzle.title}"</p>
+              <p className="text-sm sm:text-base text-muted-foreground text-pretty">From "{puzzle.title}"</p>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant={piece.isPlaced ? "default" : "secondary"}>
@@ -161,9 +161,9 @@ export default function PiecePage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="text-center">
-                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-green-700 mb-2">Congratulations!</h3>
-                  <p className="text-green-600">
+                  <CheckCircle className="w-12 h-12 sm:w-16 sm:h-16 text-green-500 mx-auto mb-4" />
+                  <h3 className="text-lg sm:text-xl font-semibold text-green-700 mb-2">Congratulations!</h3>
+                  <p className="text-green-600 text-sm sm:text-base">
                     This puzzle piece has been completed and is now part of the main puzzle.
                   </p>
                 </div>
@@ -173,7 +173,7 @@ export default function PiecePage() {
                   <p><strong>Completed at:</strong> {piece.placedAt?.toLocaleString() || "Unknown"}</p>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button onClick={() => router.push("/")} className="flex-1">
                     View Main Puzzle
                   </Button>
@@ -186,18 +186,18 @@ export default function PiecePage() {
           </div>
         ) : (
           // Active piece view - focus on the mini-game
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Main Game Area - Takes up 2/3 of the space */}
+          <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
+            {/* Main Game Area - Takes up 2/3 of the space on desktop, full width on mobile */}
             <div className="lg:col-span-2">
               <div className="space-y-6">
                 {/* Game Header */}
                 <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                       <Target className="w-5 h-5 text-blue-600" />
                       Puzzle Challenge
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="text-sm sm:text-base">
                       Complete this mini-puzzle to unlock piece ({piece.row + 1}, {piece.col + 1}) 
                       and contribute to the main puzzle!
                     </CardDescription>
@@ -215,7 +215,7 @@ export default function PiecePage() {
                         <Star className="w-5 h-5" />
                         Claim Your Piece
                       </CardTitle>
-                      <CardDescription>
+                      <CardDescription className="text-sm sm:text-base">
                         Enter your name to claim this puzzle piece and add it to the main puzzle
                       </CardDescription>
                     </CardHeader>
@@ -267,16 +267,16 @@ export default function PiecePage() {
               </div>
             </div>
 
-            {/* Sidebar - Takes up 1/3 of the space */}
+            {/* Sidebar - Takes up 1/3 of the space on desktop, full width on mobile */}
             <div className="space-y-6">
               {/* Piece Preview */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                     <Target className="w-5 h-5" />
                     Piece Preview
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-sm sm:text-base">
                     This is the piece you're working on
                   </CardDescription>
                 </CardHeader>
@@ -288,14 +288,14 @@ export default function PiecePage() {
               {/* Puzzle Progress */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                     <Users className="w-5 h-5" />
                     Overall Progress
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm sm:text-base">
                       <span>Completed Pieces</span>
                       <span>
                         {puzzle.pieces.filter((p) => p.isPlaced).length} / {puzzle.pieces.length}
@@ -309,7 +309,7 @@ export default function PiecePage() {
                         }}
                       />
                     </div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs sm:text-sm text-muted-foreground">
                       {Math.round((puzzle.pieces.filter((p) => p.isPlaced).length / puzzle.pieces.length) * 100)}%
                       complete
                     </div>
@@ -320,7 +320,7 @@ export default function PiecePage() {
               {/* Instructions */}
               <Card>
                 <CardHeader>
-                  <CardTitle>How It Works</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl">How It Works</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm text-muted-foreground">
                   <div className="flex items-start gap-2">

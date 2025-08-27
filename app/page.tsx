@@ -64,23 +64,25 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header with navigation */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">{puzzle.title}</h1>
-            <p className="text-muted-foreground">{puzzle.description}</p>
+      <div className="container mx-auto px-4 py-4 sm:py-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
+          <div className="text-center sm:text-left">
+            <h1 className="text-2xl sm:text-3xl font-bold">{puzzle.title}</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">{puzzle.description}</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
+          <div className="flex gap-2 justify-center sm:justify-end">
+            <Button variant="outline" size="sm" asChild>
               <a href="/qr-codes">
                 <QrCode className="w-4 h-4 mr-2" />
-                QR Codes
+                <span className="hidden sm:inline">QR Codes</span>
+                <span className="sm:hidden">QR</span>
               </a>
             </Button>
-            <Button variant="outline" asChild>
+            <Button variant="outline" size="sm" asChild>
               <a href="/qr-codes">
                 <Users className="w-4 h-4 mr-2" />
-                Scan & Play
+                <span className="hidden sm:inline">Scan & Play</span>
+                <span className="sm:hidden">Play</span>
               </a>
             </Button>
           </div>
