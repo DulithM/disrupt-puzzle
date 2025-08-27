@@ -67,8 +67,10 @@ export default function HomePage() {
       <div className="container mx-auto px-4 py-4 sm:py-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
           <div className="text-center sm:text-left">
-            <h1 className="text-2xl sm:text-3xl font-bold">{puzzle.title}</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">{puzzle.description}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold">Distrupt Puzzle</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              A puzzle game for the Distrupt Asia event
+            </p>
           </div>
           <div className="flex gap-2 justify-center sm:justify-end">
             <Button variant="outline" size="sm" asChild>
