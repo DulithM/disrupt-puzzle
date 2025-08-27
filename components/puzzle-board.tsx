@@ -3,7 +3,6 @@
 import { cn } from "@/lib/utils"
 import type { Puzzle } from "@/lib/types"
 import { QRCode } from "./qr-code"
-import { RealtimeStatus } from "./realtime-status"
 
 interface PuzzleBoardProps {
   puzzle: Puzzle
@@ -13,17 +12,12 @@ export function PuzzleBoard({ puzzle }: PuzzleBoardProps) {
   const { rows, cols, pieces } = puzzle
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      {/* Real-time status */}
-      <div className="mb-4">
-        <RealtimeStatus puzzleId={puzzle.id} />
-      </div>
-
+    <div className="w-full h-screen p-4">
       <div
-        className="grid gap-0 bg-muted p-2 rounded-lg"
+        className="w-full h-full grid gap-0 bg-muted rounded-lg border border-border/20"
         style={{
           gridTemplateColumns: `repeat(${cols}, 1fr)`,
-          aspectRatio: `${cols}/${rows}`,
+          gridTemplateRows: `repeat(${rows}, 1fr)`,
         }}
       >
         {Array.from({ length: rows }, (_, row) =>
@@ -35,7 +29,7 @@ export function PuzzleBoard({ puzzle }: PuzzleBoardProps) {
               <div
                 key={piece.id}
                 className={cn(
-                  "aspect-square transition-all duration-300 overflow-hidden",
+                  "w-full h-full transition-all duration-300 overflow-hidden",
                   piece.isPlaced ? "border-0" : "border border-border/20",
                 )}
               >
