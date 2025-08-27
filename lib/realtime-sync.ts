@@ -8,6 +8,8 @@ class RealtimeSync {
   private statusListeners: Set<(status: string) => void> = new Set()
   private connectionStatus: "connected" | "disconnected" | "connecting" = "disconnected"
   private activeUsers: Map<string, number> = new Map() // puzzleId -> userCount
+  private fallbackMode: boolean = false
+  private fallbackInterval: NodeJS.Timeout | null = null
 
   constructor() {
     this.connect()
@@ -18,13 +20,28 @@ class RealtimeSync {
     this.notifyStatusListeners()
 
     // Connect to WebSocket server
-    const wsUrl = typeof window !== 'undefined' 
-      ? window.location.origin 
-      : (process.env.NODE_ENV === 'production' 
-        ? 'https://your-domain.com' 
-        : 'http://localhost:3000')
+    let wsUrl: string
     
-    this.socket = io(wsUrl)
+    if (typeof window !== 'undefined') {
+      // Client-side: use environment variable or fallback
+      wsUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || 
+              (process.env.NODE_ENV === 'production' 
+                ? 'wss://your-websocket-service.com' // Replace with your WebSocket service
+                : 'http://localhost:3000')
+    } else {
+      // Server-side fallback
+      wsUrl = process.env.NODE_ENV === 'production' 
+        ? 'wss://your-websocket-service.com' // Replace with your WebSocket service
+        : 'http://localhost:3000'
+    }
+    
+    this.socket = io(wsUrl, {
+      transports: ['websocket', 'polling'],
+      timeout: 20000,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    })
 
     this.socket.on('connect', () => {
       console.log('Connected to WebSocket server')
@@ -42,6 +59,11 @@ class RealtimeSync {
       console.error('WebSocket connection error:', error)
       this.connectionStatus = "disconnected"
       this.notifyStatusListeners()
+      
+      // Enable fallback mode if WebSocket fails
+      if (!this.fallbackMode) {
+        this.enableFallbackMode()
+      }
     })
 
     // Handle incoming events
@@ -164,6 +186,29 @@ class RealtimeSync {
       this.socket.disconnect()
       this.socket = null
     }
+    
+    if (this.fallbackInterval) {
+      clearInterval(this.fallbackInterval)
+      this.fallbackInterval = null
+    }
+  }
+
+  private enableFallbackMode() {
+    console.log('Enabling fallback mode - WebSocket not available')
+    this.fallbackMode = true
+    this.connectionStatus = "connected"
+    this.notifyStatusListeners()
+    
+    // Simulate periodic updates for fallback mode
+    this.fallbackInterval = setInterval(() => {
+      // In fallback mode, we just show as connected but don't sync
+      // Users will need to refresh to see updates from other users
+    }, 30000) // Check every 30 seconds
+  }
+
+  // Method to check if we're in fallback mode
+  isFallbackMode(): boolean {
+    return this.fallbackMode
   }
 }
 

@@ -76,7 +76,7 @@ export function RealtimeStatus({ puzzleId, userId }: RealtimeStatusProps) {
   const getStatusColor = () => {
     switch (connectionStatus) {
       case "connected":
-        return "default"
+        return realtimeSync.isFallbackMode() ? "secondary" : "default"
       case "connecting":
         return "secondary"
       default:
@@ -88,15 +88,23 @@ export function RealtimeStatus({ puzzleId, userId }: RealtimeStatusProps) {
     <div className="flex items-center gap-3 text-sm">
       <Badge variant={getStatusColor()} className="flex items-center gap-1">
         {getStatusIcon()}
-        {connectionStatus}
+        {realtimeSync.isFallbackMode() ? "offline" : connectionStatus}
       </Badge>
 
-      <Badge variant="outline" className="flex items-center gap-1">
-        <Users className="w-3 h-3" />
-        {activeUsers} active
-      </Badge>
+      {!realtimeSync.isFallbackMode() && (
+        <Badge variant="outline" className="flex items-center gap-1">
+          <Users className="w-3 h-3" />
+          {activeUsers} active
+        </Badge>
+      )}
 
       {recentActivity.length > 0 && <div className="text-xs text-muted-foreground">{recentActivity[0]}</div>}
+      
+      {realtimeSync.isFallbackMode() && (
+        <div className="text-xs text-muted-foreground">
+          Refresh to see updates
+        </div>
+      )}
     </div>
   )
 }
