@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, CheckCircle, Users } from "lucide-react"
+import { ArrowLeft, CheckCircle, Users, Trophy, Target, Star } from "lucide-react"
 import { puzzleApi } from "@/lib/puzzle-api"
 import type { PuzzlePiece, Puzzle } from "@/lib/types"
 import { PieceCanvas } from "@/components/piece-canvas"
@@ -122,7 +122,7 @@ export default function PiecePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
         <div className="mb-8">
           <Button variant="ghost" onClick={() => router.push("/")} className="mb-4">
@@ -133,7 +133,7 @@ export default function PiecePage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-balance">
-                Puzzle Piece ({piece.row}, {piece.col})
+                Puzzle Piece ({piece.row + 1}, {piece.col + 1})
               </h1>
               <p className="text-muted-foreground text-pretty">From "{puzzle.title}"</p>
             </div>
@@ -148,142 +148,210 @@ export default function PiecePage() {
           <RealtimeStatus puzzleId={puzzle.id} userId={userId} />
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Piece Canvas */}
-          <div>
-            <Card>
+        {piece.isPlaced ? (
+          // Completed piece view
+          <div className="max-w-2xl mx-auto">
+            <Card className="border-green-200 bg-green-50/50">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  {piece.isPlaced && <CheckCircle className="w-5 h-5 text-green-500" />}
-                  Puzzle Piece
+                <CardTitle className="flex items-center gap-2 text-green-600">
+                  <Trophy className="w-5 h-5" />
+                  Piece Completed!
                 </CardTitle>
-                <CardDescription>
-                  Position: Row {piece.row + 1}, Column {piece.col + 1}
-                </CardDescription>
+                <CardDescription>This piece has been successfully placed by {piece.placedBy}</CardDescription>
               </CardHeader>
-              <CardContent>
-                <PieceCanvas piece={piece} puzzle={puzzle} />
-              </CardContent>
-            </Card>
-          </div>
+              <CardContent className="space-y-6">
+                <div className="text-center">
+                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-green-700 mb-2">Congratulations!</h3>
+                  <p className="text-green-600">
+                    This puzzle piece has been completed and is now part of the main puzzle.
+                  </p>
+                </div>
+                
+                <div className="bg-white rounded-lg p-4 space-y-2 text-sm">
+                  <p><strong>Completed by:</strong> {piece.placedBy}</p>
+                  <p><strong>Completed at:</strong> {piece.placedAt?.toLocaleString() || "Unknown"}</p>
+                </div>
 
-          {/* Controls */}
-          <div className="space-y-6">
-            {piece.isPlaced ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-green-600">
-                    <CheckCircle className="w-5 h-5" />
-                    Piece Completed!
-                  </CardTitle>
-                  <CardDescription>This piece has been successfully placed by {piece.placedBy}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <p>
-                      <strong>Completed by:</strong> {piece.placedBy}
-                    </p>
-                    <p>
-                      <strong>Completed at:</strong> {piece.placedAt?.toLocaleString() || "Unknown"}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <>
-                <MiniPuzzleGame piece={piece} onSuccess={handleGameSuccess} onFailure={handleGameFailure} />
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Complete This Piece</CardTitle>
-                    <CardDescription>
-                      {!gameCompleted
-                        ? "Complete the puzzle challenge above first!"
-                        : "Enter your name to claim this puzzle piece"}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="playerName">Your Name</Label>
-                      <Input
-                        id="playerName"
-                        placeholder="Enter your name"
-                        value={playerName}
-                        onChange={(e) => setPlayerName(e.target.value)}
-                        disabled={isSubmitting || !gameCompleted}
-                      />
-                    </div>
-
-                    <Button
-                      onClick={handleSubmitPiece}
-                      disabled={!playerName.trim() || isSubmitting || !gameCompleted}
-                      className="w-full"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Placing Piece...
-                        </>
-                      ) : (
-                        "Place Piece"
-                      )}
-                    </Button>
-
-                    {!gameCompleted && !gameFailed && (
-                      <p className="text-xs text-muted-foreground text-center">
-                        Complete the sliding puzzle challenge to unlock this form
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </>
-            )}
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Puzzle Progress
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span>Completed Pieces</span>
-                    <span>
-                      {puzzle.pieces.filter((p) => p.isPlaced).length} / {puzzle.pieces.length}
-                    </span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div
-                      className="bg-primary h-2 rounded-full transition-all duration-500"
-                      style={{
-                        width: `${(puzzle.pieces.filter((p) => p.isPlaced).length / puzzle.pieces.length) * 100}%`,
-                      }}
-                    />
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {Math.round((puzzle.pieces.filter((p) => p.isPlaced).length / puzzle.pieces.length) * 100)}%
-                    complete
-                  </div>
+                <div className="flex gap-2">
+                  <Button onClick={() => router.push("/")} className="flex-1">
+                    View Main Puzzle
+                  </Button>
+                  <Button variant="outline" onClick={() => router.push("/qr-codes")}>
+                    View All QR Codes
+                  </Button>
                 </div>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Instructions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm text-muted-foreground">
-                <p>1. Study the puzzle piece image above</p>
-                <p>2. Complete the sliding puzzle challenge</p>
-                <p>3. Enter your name in the form</p>
-                <p>4. Click "Place Piece" to complete this section</p>
-                <p>5. Return to the main board to see your contribution</p>
-              </CardContent>
-            </Card>
           </div>
-        </div>
+        ) : (
+          // Active piece view - focus on the mini-game
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Main Game Area - Takes up 2/3 of the space */}
+            <div className="lg:col-span-2">
+              <div className="space-y-6">
+                {/* Game Header */}
+                <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Target className="w-5 h-5 text-blue-600" />
+                      Puzzle Challenge
+                    </CardTitle>
+                    <CardDescription>
+                      Complete this mini-puzzle to unlock piece ({piece.row + 1}, {piece.col + 1}) 
+                      and contribute to the main puzzle!
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+
+                {/* Mini Game */}
+                <MiniPuzzleGame piece={piece} onSuccess={handleGameSuccess} onFailure={handleGameFailure} />
+
+                {/* Claim Form - Only show after game completion */}
+                {gameCompleted && (
+                  <Card className="border-green-200 bg-green-50/50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-green-600">
+                        <Star className="w-5 h-5" />
+                        Claim Your Piece
+                      </CardTitle>
+                      <CardDescription>
+                        Enter your name to claim this puzzle piece and add it to the main puzzle
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="playerName">Your Name</Label>
+                        <Input
+                          id="playerName"
+                          placeholder="Enter your name"
+                          value={playerName}
+                          onChange={(e) => setPlayerName(e.target.value)}
+                          disabled={isSubmitting}
+                          className="bg-white"
+                        />
+                      </div>
+
+                      <Button
+                        onClick={handleSubmitPiece}
+                        disabled={!playerName.trim() || isSubmitting}
+                        className="w-full bg-green-600 hover:bg-green-700"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Placing Piece...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Place Piece on Main Puzzle
+                          </>
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Failure Message */}
+                {gameFailed && (
+                  <Card className="border-red-200 bg-red-50/50">
+                    <CardContent className="pt-6">
+                      <div className="text-center text-red-600">
+                        <p className="font-medium mb-2">Don't give up!</p>
+                        <p className="text-sm">Try the challenge again to unlock this piece.</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+
+            {/* Sidebar - Takes up 1/3 of the space */}
+            <div className="space-y-6">
+              {/* Piece Preview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="w-5 h-5" />
+                    Piece Preview
+                  </CardTitle>
+                  <CardDescription>
+                    This is the piece you're working on
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PieceCanvas piece={piece} puzzle={puzzle} />
+                </CardContent>
+              </Card>
+
+              {/* Puzzle Progress */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Overall Progress
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span>Completed Pieces</span>
+                      <span>
+                        {puzzle.pieces.filter((p) => p.isPlaced).length} / {puzzle.pieces.length}
+                      </span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div
+                        className="bg-primary h-2 rounded-full transition-all duration-500"
+                        style={{
+                          width: `${(puzzle.pieces.filter((p) => p.isPlaced).length / puzzle.pieces.length) * 100}%`,
+                        }}
+                      />
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {Math.round((puzzle.pieces.filter((p) => p.isPlaced).length / puzzle.pieces.length) * 100)}%
+                      complete
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Instructions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>How It Works</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm text-muted-foreground">
+                  <div className="flex items-start gap-2">
+                    <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold mt-0.5">
+                      1
+                    </div>
+                    <p>Complete the mini-puzzle challenge above</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <div className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-bold mt-0.5">
+                      2
+                    </div>
+                    <p>Enter your name to claim the piece</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <div className="w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xs font-bold mt-0.5">
+                      3
+                    </div>
+                    <p>Your piece will appear on the main puzzle</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <div className="w-6 h-6 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-xs font-bold mt-0.5">
+                      4
+                    </div>
+                    <p>Return to see the complete puzzle</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

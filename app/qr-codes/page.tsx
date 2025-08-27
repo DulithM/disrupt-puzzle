@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, RotateCcw } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { ArrowLeft, RotateCcw, QrCode, Smartphone, Target, Trophy } from "lucide-react"
 import { puzzleApi } from "@/lib/puzzle-api"
 import { puzzleStore } from "@/lib/puzzle-store"
 import type { Puzzle } from "@/lib/types"
@@ -85,6 +87,10 @@ export default function QRCodesPage() {
     )
   }
 
+  const completedPieces = puzzle.pieces.filter(p => p.isPlaced).length
+  const totalPieces = puzzle.pieces.length
+  const completionPercentage = Math.round((completedPieces / totalPieces) * 100)
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -114,6 +120,86 @@ export default function QRCodesPage() {
           </Button>
         </div>
 
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="text-center mb-6">
+            <h1 className="text-4xl font-bold mb-2">Scan & Play</h1>
+            <p className="text-xl text-muted-foreground mb-4">
+              Scan QR codes to unlock puzzle pieces through mini-games
+            </p>
+            
+            {/* Progress Overview */}
+            <div className="inline-flex items-center gap-4 bg-muted/50 rounded-lg p-4 mb-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">{completedPieces}</div>
+                <div className="text-sm text-muted-foreground">Completed</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold">{totalPieces}</div>
+                <div className="text-sm text-muted-foreground">Total Pieces</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{completionPercentage}%</div>
+                <div className="text-sm text-muted-foreground">Complete</div>
+              </div>
+            </div>
+          </div>
+
+          {/* How It Works */}
+          <Card className="mb-8 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Smartphone className="w-5 h-5 text-blue-600" />
+                How to Play
+              </CardTitle>
+              <CardDescription>
+                Follow these steps to contribute to the collaborative puzzle
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-4 gap-4">
+                <div className="text-center space-y-2">
+                  <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto">
+                    <QrCode className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-semibold">1. Scan QR Code</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Use your phone to scan any QR code below
+                  </p>
+                </div>
+                <div className="text-center space-y-2">
+                  <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
+                    <Target className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-semibold">2. Play Mini-Game</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Complete the puzzle challenge to unlock the piece
+                  </p>
+                </div>
+                <div className="text-center space-y-2">
+                  <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto">
+                    <Trophy className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-semibold">3. Claim Piece</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Enter your name to claim the completed piece
+                  </p>
+                </div>
+                <div className="text-center space-y-2">
+                  <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto">
+                    <span className="text-lg font-bold">✓</span>
+                  </div>
+                  <h4 className="font-semibold">4. See Progress</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Your piece appears on the main puzzle board
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* QR Code Grid */}
         <QRCodeGrid puzzle={puzzle} />
       </div>
     </div>
