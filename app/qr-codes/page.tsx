@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, RotateCcw } from "lucide-react"
 import { puzzleApi } from "@/lib/puzzle-api"
+import { puzzleStore } from "@/lib/puzzle-store"
 import type { Puzzle } from "@/lib/types"
 import { QRCodeGrid } from "@/components/qr-code-grid"
 
@@ -12,6 +13,7 @@ export default function QRCodesPage() {
   const router = useRouter()
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isResetting, setIsResetting] = useState(false)
 
   useEffect(() => {
     const loadPuzzle = async () => {
@@ -27,6 +29,36 @@ export default function QRCodesPage() {
 
     loadPuzzle()
   }, [])
+
+  useEffect(() => {
+    let unsubscribe = () => {}
+
+    if (puzzle) {
+      unsubscribe = puzzleApi.subscribe(puzzle.id, (updatedPuzzle) => {
+        setPuzzle(updatedPuzzle)
+      })
+    }
+
+    return () => {
+      unsubscribe()
+    }
+  }, [puzzle])
+
+  const handleReset = async () => {
+    if (!puzzle) return
+    
+    setIsResetting(true)
+    try {
+      puzzleStore.resetPuzzle(puzzle.id)
+      // Reload the puzzle to reflect the reset
+      const updatedPuzzle = await puzzleApi.getPuzzle(puzzle.id)
+      setPuzzle(updatedPuzzle)
+    } catch (error) {
+      console.error("Failed to reset puzzle:", error)
+    } finally {
+      setIsResetting(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -56,10 +88,31 @@ export default function QRCodesPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <Button variant="ghost" onClick={() => router.push("/")} className="mb-6">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Main Puzzle
-        </Button>
+        <div className="flex items-center justify-between mb-6">
+          <Button variant="ghost" onClick={() => router.push("/")}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Main Puzzle
+          </Button>
+          
+          <Button
+            onClick={handleReset}
+            disabled={isResetting}
+            variant="outline"
+            size="sm"
+          >
+            {isResetting ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                Resetting...
+              </>
+            ) : (
+              <>
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Reset Puzzle
+              </>
+            )}
+          </Button>
+        </div>
 
         <QRCodeGrid puzzle={puzzle} />
       </div>

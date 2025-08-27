@@ -16,7 +16,10 @@ export const puzzleApi = {
 
     const puzzle = puzzleStore.getAllPuzzles().find((p) => p.pieces.some((piece) => piece.id === pieceId))
     if (puzzle) {
+      // Notify via WebSocket
       realtimeSync.notifyPiecePlaced(puzzle.id, pieceId, placedBy)
+      // Also notify puzzle update
+      realtimeSync.notifyPuzzleUpdated(puzzle.id, puzzle)
     }
   },
 

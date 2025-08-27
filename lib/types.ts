@@ -26,3 +26,16 @@ export interface PuzzleState {
   loading: boolean
   error: string | null
 }
+
+// WebSocket types
+export interface NextApiResponseServerIO extends Response {
+  socket: any
+  server: any
+}
+
+export interface WebSocketEvent {
+  type: 'piece_placed' | 'puzzle_updated' | 'user_joined' | 'user_left' | 'puzzle_joined'
+  data: any
+  timestamp: Date
+  userId?: string
+}

@@ -39,6 +39,9 @@ export function RealtimeStatus({ puzzleId, userId }: RealtimeStatusProps) {
             setRecentActivity((prev) => [`${event.data.placedBy} placed a piece`, ...prev.slice(0, 4)])
           }
           break
+        case "puzzle_updated":
+          // Handle puzzle updates if needed
+          break
       }
     })
 
@@ -48,7 +51,7 @@ export function RealtimeStatus({ puzzleId, userId }: RealtimeStatusProps) {
     }
 
     // Initial user count
-    setActiveUsers(realtimeSync.getActiveUserCount())
+    setActiveUsers(realtimeSync.getActiveUserCount(puzzleId))
 
     return () => {
       unsubscribeStatus()
