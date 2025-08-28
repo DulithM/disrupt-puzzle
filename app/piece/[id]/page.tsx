@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, CheckCircle, Target } from "lucide-react"
+import { ArrowLeft, CheckCircle, Target, AlertTriangle } from "lucide-react"
 import { puzzleApi } from "@/lib/puzzle-api"
 import type { PuzzlePiece, Puzzle } from "@/lib/types"
 import { MiniPuzzleGame } from "@/components/mini-puzzle-game"
@@ -16,23 +16,44 @@ export default function PiecePage() {
 
   const [piece, setPiece] = useState<PuzzlePiece | null>(null)
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null)
+  const [allPuzzles, setAllPuzzles] = useState<Puzzle[]>([])
+  const [currentActivePuzzle, setCurrentActivePuzzle] = useState<Puzzle | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [gameCompleted, setGameCompleted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [puzzleCompleted, setPuzzleCompleted] = useState(false)
 
+  // Load all puzzles and find current active puzzle
   useEffect(() => {
-    const loadPiece = async () => {
+    const loadPuzzles = async () => {
       try {
         setLoading(true)
         setError(null)
         
-        // First, get all puzzles to find which one contains this piece
+        // Get all available puzzles
         const puzzles = await puzzleApi.getAllPuzzles()
         if (puzzles.length === 0) {
           setError("No puzzles found")
           return
         }
+        
+        setAllPuzzles(puzzles)
+        
+        // Find the current active puzzle (first incomplete puzzle)
+        let activePuzzle: Puzzle | null = null
+        for (const puzzleData of puzzles) {
+          const puzzleId = puzzleData.id || (puzzleData as any)._id
+          if (puzzleId) {
+            const loadedPuzzle = await puzzleApi.getPuzzle(puzzleId)
+            if (loadedPuzzle && !loadedPuzzle.completedAt) {
+              activePuzzle = loadedPuzzle
+              break
+            }
+          }
+        }
+        
+        setCurrentActivePuzzle(activePuzzle)
         
         // Find the puzzle that contains this piece
         let foundPuzzle: Puzzle | null = null
@@ -41,15 +62,31 @@ export default function PiecePage() {
         for (const puzzleData of puzzles) {
           const pieceData = puzzleData.pieces.find(p => p.id === pieceId)
           if (pieceData) {
-            foundPuzzle = puzzleData
-            foundPiece = pieceData
-            break
+            const puzzleId = puzzleData.id || (puzzleData as any)._id
+            if (puzzleId) {
+              const loadedPuzzle = await puzzleApi.getPuzzle(puzzleId)
+              if (loadedPuzzle) {
+                foundPuzzle = loadedPuzzle
+                foundPiece = pieceData
+                break
+              }
+            }
           }
         }
         
         if (foundPuzzle && foundPiece) {
           setPuzzle(foundPuzzle)
           setPiece(foundPiece)
+          
+          // Check if this piece belongs to a completed puzzle
+          if (foundPuzzle.completedAt) {
+            setPuzzleCompleted(true)
+            console.log(`⚠️ Piece ${pieceId} belongs to completed puzzle: ${foundPuzzle.title}`)
+          } else if (activePuzzle && foundPuzzle.id !== activePuzzle.id) {
+            // This piece belongs to a puzzle that's not currently active
+            setPuzzleCompleted(true)
+            console.log(`⚠️ Piece ${pieceId} belongs to inactive puzzle: ${foundPuzzle.title}`)
+          }
         } else {
           setError("Piece not found in any puzzle")
         }
@@ -61,7 +98,7 @@ export default function PiecePage() {
       }
     }
 
-    loadPiece()
+    loadPuzzles()
   }, [pieceId])
 
   useEffect(() => {
@@ -73,6 +110,11 @@ export default function PiecePage() {
         const updatedPiece = updatedPuzzle.pieces.find((p) => p.id === pieceId)
         if (updatedPiece) {
           setPiece(updatedPiece)
+        }
+        
+        // Check if puzzle was completed
+        if (updatedPuzzle.completedAt) {
+          setPuzzleCompleted(true)
         }
       })
     }
@@ -153,6 +195,43 @@ export default function PiecePage() {
     )
   }
 
+  // Show warning if piece belongs to completed/inactive puzzle
+  if (puzzleCompleted) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-orange-600">
+              <AlertTriangle className="w-5 h-5" />
+              Puzzle Already Completed
+            </CardTitle>
+            <CardDescription>
+              This piece belongs to a puzzle that has already been completed. 
+              The current active puzzle is: <strong>{currentActivePuzzle?.title || 'Unknown'}</strong>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+              <p className="text-sm text-orange-800">
+                <strong>Current Active Puzzle:</strong> {currentActivePuzzle?.title}
+              </p>
+              <p className="text-sm text-orange-700 mt-1">
+                Please scan a QR code from the current puzzle to continue playing.
+              </p>
+            </div>
+            <Button onClick={() => router.push("/")} className="w-full">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Main Puzzle
+            </Button>
+            <Button variant="outline" onClick={() => router.push("/qr-codes")} className="w-full">
+              View Current QR Codes
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   if (piece.isPlaced) {
     // If piece is already completed, redirect to main puzzle
     router.push("/")
@@ -177,6 +256,11 @@ export default function PiecePage() {
               Complete this mini-puzzle to unlock piece ({piece.row + 1}, {piece.col + 1}) 
               and contribute to the main puzzle!
             </p>
+            {currentActivePuzzle && (
+              <p className="text-sm text-blue-600 mt-2">
+                Current Puzzle: <strong>{currentActivePuzzle.title}</strong>
+              </p>
+            )}
           </div>
         </div>
 

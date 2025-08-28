@@ -4,19 +4,6 @@ import { printQRCodeInstructions } from './qr-generator';
 
 const samplePuzzles = [
   {
-    title: 'Mountain Landscape',
-    description: 'A beautiful mountain landscape with snow-capped peaks and lush valleys',
-    imageUrl: '/mountain-landscape-puzzle.png',
-    rows: 4,
-    cols: 6,
-    difficulty: 'easy',
-    category: 'exhibition',
-    tags: ['mountains', 'landscape', 'nature', 'scenic'],
-    maxPlayers: 50,
-    exhibitionId: 'main-exhibition',
-    unlockCode: 'mountain_landscape_2024'
-  },
-  {
     title: 'Vintage Street Scene',
     description: 'A nostalgic view of an old European street with cobblestones and historic buildings',
     imageUrl: '/vintage-street-scene.png',
@@ -28,6 +15,19 @@ const samplePuzzles = [
     maxPlayers: 50,
     exhibitionId: 'main-exhibition',
     unlockCode: 'vintage_street_2024'
+  },
+  {
+    title: 'Mountain Landscape',
+    description: 'A beautiful mountain landscape with snow-capped peaks and lush valleys',
+    imageUrl: '/mountain-landscape-puzzle.png',
+    rows: 4,
+    cols: 6,
+    difficulty: 'easy',
+    category: 'exhibition',
+    tags: ['mountains', 'landscape', 'nature', 'scenic'],
+    maxPlayers: 50,
+    exhibitionId: 'main-exhibition',
+    unlockCode: 'mountain_landscape_2024'
   },
   {
     title: 'Ocean Sunset',

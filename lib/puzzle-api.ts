@@ -80,22 +80,32 @@ export const puzzleApi = {
       const puzzles = await this.getAllPuzzles()
       console.log('🔍 Found puzzles:', puzzles.length)
       
-      const puzzle = puzzles.find((p) => p.pieces.some((piece) => piece.id === pieceId))
+      let targetPuzzle = null
+      let targetPuzzleId = null
       
-      if (!puzzle) {
-        throw new Error('Puzzle not found for piece')
+      // Find the puzzle that contains this piece
+      for (const puzzle of puzzles) {
+        const piece = puzzle.pieces.find((p) => p.id === pieceId)
+        if (piece) {
+          targetPuzzle = puzzle
+          targetPuzzleId = puzzle.id || (puzzle as any)._id
+          console.log('🔍 Found piece in puzzle:', puzzle.title, 'ID:', targetPuzzleId)
+          break
+        }
+      }
+      
+      if (!targetPuzzle || !targetPuzzleId) {
+        throw new Error(`Puzzle not found for piece: ${pieceId}`)
       }
 
-      // Get the correct puzzle ID (handle both id and _id fields)
-      const puzzleId = puzzle.id || (puzzle as any)._id
-      console.log('🔍 Using puzzle ID:', puzzleId)
+      console.log('🔍 Using puzzle ID:', targetPuzzleId)
       
-      if (!puzzleId) {
-        throw new Error('Puzzle ID not found')
-      }
-
       // Check if we're using mock data
-      const isMockData = puzzleId.startsWith('mock-') || puzzleId.startsWith('piece-')
+      const isMockData = typeof targetPuzzleId === 'string' && (
+        targetPuzzleId.startsWith('mock-') || 
+        targetPuzzleId.startsWith('piece-') ||
+        targetPuzzleId.length < 10
+      )
       
       if (isMockData) {
         console.log('🎭 Using mock piece placement for:', pieceId)
@@ -105,7 +115,8 @@ export const puzzleApi = {
       }
 
       // Update the piece in the database
-      const response = await fetch(`/api/puzzles/${puzzleId}/pieces`, {
+      console.log('🔄 Making API call to place piece...')
+      const response = await fetch(`/api/puzzles/${targetPuzzleId}/pieces`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -117,10 +128,12 @@ export const puzzleApi = {
         }),
       })
 
+      console.log('📡 API Response status:', response.status)
+      
       if (!response.ok) {
         const errorText = await response.text()
         console.error('❌ API response error:', response.status, errorText)
-        throw new Error(`Failed to place piece: ${response.statusText}`)
+        throw new Error(`Failed to place piece: ${response.statusText} - ${errorText}`)
       }
 
       const data = await response.json()
@@ -131,9 +144,10 @@ export const puzzleApi = {
       }
 
       console.log('✅ Piece placed successfully!')
+      console.log('✅ Puzzle completed:', data.puzzleCompleted)
       
       // Notify via WebSocket for real-time updates
-      this.notifyPiecePlaced(puzzleId, pieceId, placedBy)
+      this.notifyPiecePlaced(targetPuzzleId, pieceId, placedBy)
     } catch (error) {
       console.error('❌ Error placing piece:', error)
       throw error
@@ -174,6 +188,8 @@ export const puzzleApi = {
       
       const data = await response.json()
       console.log('📦 All puzzles data received:', data)
+      console.log('📦 Data success:', data.success)
+      console.log('📦 Data data length:', data.data?.length)
       
       // If this is mock data, populate pieces for each puzzle
       if (data.message && data.message.includes('Mock data')) {
@@ -196,7 +212,9 @@ export const puzzleApi = {
         return puzzlesWithPieces
       }
       
-      return data.success ? data.data : []
+      const result = data.success ? data.data : []
+      console.log('📦 Returning puzzles:', result.length)
+      return result
     } catch (error) {
       console.error('Error fetching puzzles:', error)
       return []
@@ -204,26 +222,58 @@ export const puzzleApi = {
   },
 
   subscribe(puzzleId: string, callback: (puzzle: Puzzle) => void): () => void {
+    console.log('🔍 Setting up subscription for puzzle:', puzzleId)
+    
     // Set up polling to check for updates since we're not using WebSocket in the frontend
     const interval = setInterval(async () => {
       try {
         const puzzle = await this.getPuzzle(puzzleId)
         if (puzzle) {
+          console.log('🔄 Subscription update for puzzle:', puzzle.title)
+          console.log('🔄 Completed pieces:', puzzle.pieces.filter(p => p.isPlaced).length)
+          console.log('🔄 Total pieces:', puzzle.pieces.length)
+          console.log('🔄 Puzzle completed:', !!puzzle.completedAt)
           callback(puzzle)
         }
       } catch (error) {
         console.error('Error in puzzle subscription:', error)
       }
-    }, 2000) // Check every 2 seconds
+    }, 1000) // Check every 1 second for faster updates
 
     // Return unsubscribe function
     return () => {
+      console.log('🔌 Unsubscribing from puzzle:', puzzleId)
       clearInterval(interval)
     }
   },
 
+  async resetPuzzle(puzzleId: string): Promise<boolean> {
+    try {
+      console.log(`🔄 Resetting puzzle: ${puzzleId}`)
+      
+      const response = await fetch(`/api/puzzles/${puzzleId}/reset`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to reset puzzle: ${response.statusText}`)
+      }
+      
+      const data = await response.json()
+      console.log('✅ Puzzle reset successfully:', data.message)
+      
+      return data.success
+    } catch (error) {
+      console.error('❌ Error resetting puzzle:', error)
+      return false
+    }
+  },
+
   // Helper method to notify WebSocket (if needed)
-  private notifyPiecePlaced(puzzleId: string, pieceId: string, placedBy: string): void {
+  notifyPiecePlaced(puzzleId: string, pieceId: string, placedBy: string): void {
     // This could be used to notify other clients via WebSocket
     // For now, we'll rely on the polling subscription
     console.log(`Piece ${pieceId} placed by ${placedBy} in puzzle ${puzzleId}`)

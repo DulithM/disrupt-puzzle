@@ -38,7 +38,7 @@ export function PuzzleBoard({ puzzle }: PuzzleBoardProps) {
                     <div
                       className="w-full h-full bg-cover bg-no-repeat"
                       style={{
-                        backgroundImage: `url(${puzzle.imageUrl})`,
+                        backgroundImage: `url(${encodeURI(puzzle.imageUrl)})`,
                         backgroundPosition: `${(col / (cols - 1)) * 100}% ${(row / (rows - 1)) * 100}%`,
                         backgroundSize: `${cols * 100}% ${rows * 100}%`,
                       }}

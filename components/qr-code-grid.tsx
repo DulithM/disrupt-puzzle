@@ -4,8 +4,9 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Download, Printer, Copy, Check, Target, CheckCircle, Clock } from "lucide-react"
+import { Download, Printer, Copy, Check, Target, CheckCircle, Clock, Zap } from "lucide-react"
 import { QRCode } from "./qr-code"
+import { puzzleApi } from "@/lib/puzzle-api"
 import type { Puzzle } from "@/lib/types"
 
 interface QRCodeGridProps {
@@ -14,6 +15,7 @@ interface QRCodeGridProps {
 
 export function QRCodeGrid({ puzzle }: QRCodeGridProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [completingPiece, setCompletingPiece] = useState<string | null>(null)
 
   const copyToClipboard = async (text: string, pieceId: string) => {
     try {
@@ -39,6 +41,56 @@ export function QRCodeGrid({ puzzle }: QRCodeGridProps) {
     window.print()
   }
 
+  const completePiece = async (pieceId: string) => {
+    if (completingPiece) return // Prevent multiple clicks
+    
+    try {
+      setCompletingPiece(pieceId)
+      console.log(`🔄 Completing piece: ${pieceId}`)
+      
+      // Use the test endpoint for more reliable piece placement
+      const response = await fetch('/api/test-piece', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          pieceId,
+          placedBy: "Dev Tester"
+        }),
+      })
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Failed to place piece: ${response.statusText} - ${errorText}`)
+      }
+      
+      const data = await response.json()
+      console.log('✅ Piece placement response:', data)
+      
+      if (!data.success) {
+        if (data.error === 'Piece already completed') {
+          console.log('⚠️ Piece already completed by:', data.data.alreadyPlacedBy)
+          console.log('⚠️ Completed at:', data.data.placedAt)
+          console.log('⚠️ Puzzle:', data.data.puzzleTitle)
+          // Don't throw error for already completed pieces, just log it
+          return
+        }
+        throw new Error(data.error || 'Failed to place piece')
+      }
+      
+      console.log(`✅ Piece ${pieceId} completed successfully`)
+      console.log(`✅ Puzzle: ${data.data.puzzleTitle}`)
+      console.log(`✅ Completed pieces: ${data.data.completedPieces}/${data.data.totalPieces}`)
+      console.log(`✅ Puzzle completed: ${data.data.puzzleCompleted}`)
+      
+    } catch (error) {
+      console.error(`❌ Failed to complete piece ${pieceId}:`, error)
+    } finally {
+      setCompletingPiece(null)
+    }
+  }
+
   const getStatusIcon = (isPlaced: boolean) => {
     if (isPlaced) {
       return <CheckCircle className="w-4 h-4 text-green-600" />
@@ -61,6 +113,17 @@ export function QRCodeGrid({ puzzle }: QRCodeGridProps) {
           <h2 className="text-xl sm:text-2xl font-bold">Puzzle Piece QR Codes</h2>
           <p className="text-sm sm:text-base text-muted-foreground">Scan any code to start playing and unlock pieces</p>
         </div>
+      </div>
+
+      {/* Development Notice */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Zap className="w-4 h-4 text-yellow-600" />
+          <span className="font-medium text-yellow-800">Development Mode</span>
+        </div>
+        <p className="text-sm text-yellow-700">
+          Use the "Complete" buttons below to quickly test puzzle progression without playing the mini-games.
+        </p>
       </div>
 
       {/* QR Code Grid */}
@@ -166,12 +229,69 @@ export function QRCodeGrid({ puzzle }: QRCodeGridProps) {
                     <Download className="w-3 h-3" />
                   </Button>
                 </div>
+
+                {/* Development Complete Button */}
+                {!piece.isPlaced ? (
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={() => completePiece(piece.id)}
+                    disabled={completingPiece === piece.id}
+                    className="w-full text-xs bg-yellow-600 hover:bg-yellow-700 text-white"
+                  >
+                    {completingPiece === piece.id ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                        Completing...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-3 h-3 mr-1" />
+                        Complete (Dev)
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <div className="w-full text-xs bg-green-100 text-green-800 p-2 rounded text-center">
+                    ✓ Already Completed
+                  </div>
+                )}
               </CardContent>
             </Card>
           )
         })}
       </div>
 
+      {/* Bulk Actions */}
+      <div className="flex flex-wrap gap-2 justify-center">
+        <Button
+          variant="outline"
+          onClick={printAllQRCodes}
+          className="text-sm"
+        >
+          <Printer className="w-4 h-4 mr-2" />
+          Print All QR Codes
+        </Button>
+        
+        <Button
+          variant="default"
+          onClick={async () => {
+            // Complete all remaining pieces
+            const incompletePieces = puzzle.pieces.filter(p => !p.isPlaced)
+            console.log(`🔄 Completing all ${incompletePieces.length} remaining pieces...`)
+            
+            for (const piece of incompletePieces) {
+              await completePiece(piece.id)
+              // Small delay to prevent overwhelming the API
+              await new Promise(resolve => setTimeout(resolve, 100))
+            }
+          }}
+          className="text-sm bg-green-600 hover:bg-green-700"
+        >
+          <Zap className="w-4 h-4 mr-2" />
+          Complete All Remaining (Dev)
+        </Button>
+      </div>
 
       {/* Print Styles */}
       <style jsx global>{`

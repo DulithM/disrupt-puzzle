@@ -33,7 +33,8 @@ const PuzzleSchema = new mongoose.Schema({
   exhibitionId: String,
   unlockCode: String,
   isUnlocked: Boolean,
-  unlockedAt: Date
+  unlockedAt: Date,
+  completedAt: Date
 }, { 
   timestamps: true,
   strict: false // Allow any fields
@@ -41,9 +42,93 @@ const PuzzleSchema = new mongoose.Schema({
 
 const Puzzle = mongoose.models.Puzzle || mongoose.model('Puzzle', PuzzleSchema);
 
+// Puzzle data in the desired order
+const puzzleDataArray = [
+  {
+    title: 'Vintage Street Scene',
+    description: 'A nostalgic view of an old European street with cobblestones and historic buildings',
+    imageUrl: '/vintage-street-scene.png',
+    rows: 5,
+    cols: 7,
+    isActive: true,
+    difficulty: 'medium',
+    category: 'exhibition',
+    tags: ['street', 'vintage', 'architecture', 'urban'],
+    maxPlayers: 50,
+    currentPlayers: 0,
+    exhibitionId: 'main-exhibition',
+    unlockCode: 'vintage_street_2024',
+    isUnlocked: false
+  },
+  {
+    title: 'Mountain Landscape',
+    description: 'A beautiful mountain landscape with snow-capped peaks and lush valleys',
+    imageUrl: '/mountain-landscape-puzzle.png',
+    rows: 4,
+    cols: 6,
+    isActive: true,
+    difficulty: 'easy',
+    category: 'exhibition',
+    tags: ['mountains', 'landscape', 'nature', 'scenic'],
+    maxPlayers: 50,
+    currentPlayers: 0,
+    exhibitionId: 'main-exhibition',
+    unlockCode: 'mountain_landscape_2024',
+    isUnlocked: false
+  },
+  {
+    title: 'Ocean Sunset',
+    description: 'A breathtaking ocean sunset with golden skies and calm waters',
+    imageUrl: '/Ocean Sunset.png',
+    rows: 6,
+    cols: 8,
+    isActive: true,
+    difficulty: 'hard',
+    category: 'exhibition',
+    tags: ['ocean', 'sunset', 'nature', 'water'],
+    maxPlayers: 50,
+    currentPlayers: 0,
+    exhibitionId: 'main-exhibition',
+    unlockCode: 'ocean_sunset_2024',
+    isUnlocked: false
+  },
+  {
+    title: 'City Skyline',
+    description: 'Modern city skyline with towering skyscrapers and urban architecture',
+    imageUrl: '/City Skyline.png',
+    rows: 4,
+    cols: 5,
+    isActive: true,
+    difficulty: 'easy',
+    category: 'exhibition',
+    tags: ['city', 'skyline', 'architecture', 'modern'],
+    maxPlayers: 50,
+    currentPlayers: 0,
+    exhibitionId: 'main-exhibition',
+    unlockCode: 'city_skyline_2024',
+    isUnlocked: false
+  },
+  {
+    title: 'Forest Path',
+    description: 'A serene forest path surrounded by tall trees and natural beauty',
+    imageUrl: '/Forest Path.png',
+    rows: 5,
+    cols: 6,
+    isActive: true,
+    difficulty: 'medium',
+    category: 'exhibition',
+    tags: ['forest', 'nature', 'path', 'trees'],
+    maxPlayers: 50,
+    currentPlayers: 0,
+    exhibitionId: 'main-exhibition',
+    unlockCode: 'forest_path_2024',
+    isUnlocked: false
+  }
+];
+
 async function seedDatabase() {
   try {
-    console.log('🌱 Starting simple database seeding...');
+    console.log('🌱 Starting database seeding with new puzzle order...');
     
     // Connect to MongoDB
     await mongoose.connect(MONGODB_URI, { dbName: DB_NAME });
@@ -53,58 +138,46 @@ async function seedDatabase() {
     await Puzzle.deleteMany({});
     console.log('🗑️  Cleared existing puzzles');
     
-    // Create a simple puzzle
-    const puzzleData = {
-      title: 'Vintage British Street Scene',
-      description: 'A collaborative jigsaw puzzle featuring a charming vintage British street with cobblestones, brick houses, and period characters',
-      imageUrl: '/vintage-street-scene.png',
-      rows: 4,
-      cols: 6,
-      isActive: true,
-      difficulty: 'medium',
-      category: 'exhibition',
-      tags: ['vintage', 'british', 'street', 'architecture'],
-      maxPlayers: 50,
-      currentPlayers: 0,
-      exhibitionId: 'main-exhibition',
-      unlockCode: 'vintage_street_2024',
-      isUnlocked: false
-    };
+    // Create puzzles in the desired order
+    const createdPuzzles = [];
+    let globalPieceCounter = 0;
     
-    // Generate pieces
-    const pieces = [];
-    for (let row = 0; row < puzzleData.rows; row++) {
-      for (let col = 0; col < puzzleData.cols; col++) {
-        pieces.push({
-          id: `${row}-${col}`,
-          row,
-          col,
-          imageUrl: puzzleData.imageUrl,
-          isPlaced: false,
-          unlockCode: `${puzzleData.unlockCode}_piece_${row}_${col}`,
-          unlockedAt: null,
-          originalPosition: { row, col }
-        });
+    for (const puzzleData of puzzleDataArray) {
+      // Generate pieces for this puzzle
+      const pieces = [];
+      for (let row = 0; row < puzzleData.rows; row++) {
+        for (let col = 0; col < puzzleData.cols; col++) {
+          pieces.push({
+            id: `piece-${globalPieceCounter}`,
+            row,
+            col,
+            imageUrl: puzzleData.imageUrl,
+            isPlaced: false,
+            unlockCode: `${puzzleData.unlockCode}_piece_${row * puzzleData.cols + col}`,
+            unlockedAt: null,
+            originalPosition: { row, col }
+          });
+          globalPieceCounter++;
+        }
       }
+      
+      // Create and save the puzzle
+      const puzzle = new Puzzle({
+        ...puzzleData,
+        pieces
+      });
+      
+      await puzzle.save();
+      createdPuzzles.push(puzzle);
+      console.log(`🧩 Created puzzle: ${puzzle.title} (${puzzle.rows}x${puzzle.cols}) with ${pieces.length} pieces`);
     }
     
-    // Create and save the puzzle
-    const puzzle = new Puzzle({
-      ...puzzleData,
-      pieces
+    console.log('\n📋 Final Puzzle Sequence:');
+    createdPuzzles.forEach((puzzle, index) => {
+      console.log(`  ${index + 1}. ${puzzle.title} (${puzzle.unlockCode})`);
     });
     
-    await puzzle.save();
-    console.log(`🧩 Created puzzle: ${puzzle.title} with ${pieces.length} pieces`);
-    console.log(`   Puzzle ID: ${puzzle._id}`);
-    console.log(`   Title: ${puzzle.title}`);
-    console.log(`   Pieces count: ${puzzle.pieces ? puzzle.pieces.length : 'No pieces'}`);
-    
-    // Verify the data was saved
-    const savedPuzzle = await Puzzle.findById(puzzle._id);
-    console.log(`\n✅ Verification:`);
-    console.log(`   Saved title: ${savedPuzzle.title}`);
-    console.log(`   Saved pieces: ${savedPuzzle.pieces ? savedPuzzle.pieces.length : 'No pieces'}`);
+    console.log('\n✅ Database seeding completed successfully!');
     
   } catch (error) {
     console.error('❌ Error seeding database:', error);
