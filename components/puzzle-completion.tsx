@@ -2,17 +2,15 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Trophy, Users, Calendar, ArrowRight, RotateCcw } from "lucide-react"
+import { Trophy, Users, Calendar } from "lucide-react"
 import type { Puzzle } from "@/lib/types"
 
 interface PuzzleCompletionProps {
   puzzle: Puzzle
-  onReset: () => void
   isLastPuzzle?: boolean
 }
 
-export function PuzzleCompletion({ puzzle, onReset, isLastPuzzle = false }: PuzzleCompletionProps) {
+export function PuzzleCompletion({ puzzle, isLastPuzzle = false }: PuzzleCompletionProps) {
   const [showCelebration, setShowCelebration] = useState(false)
 
   useEffect(() => {
@@ -30,11 +28,6 @@ export function PuzzleCompletion({ puzzle, onReset, isLastPuzzle = false }: Puzz
 
   // Convert completedAt to Date object if it's a string
   const completedAtDate = puzzle.completedAt ? new Date(puzzle.completedAt) : null
-
-  const handleContinue = () => {
-    setShowCelebration(false)
-    onReset()
-  }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -66,29 +59,6 @@ export function PuzzleCompletion({ puzzle, onReset, isLastPuzzle = false }: Puzz
               <Users className="w-4 h-4 text-muted-foreground" />
               <span>{uniqueContributors} contributor{uniqueContributors !== 1 ? 's' : ''} participated</span>
             </div>
-          </div>
-
-          <div className="pt-4 space-y-2">
-            <Button onClick={handleContinue} className="w-full">
-              {isLastPuzzle ? (
-                <>
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Restart All Puzzles
-                </>
-              ) : (
-                <>
-                  <ArrowRight className="w-4 h-4 mr-2" />
-                  Continue to Next Puzzle
-                </>
-              )}
-            </Button>
-            <Button 
-              onClick={() => setShowCelebration(false)} 
-              className="w-full" 
-              variant="ghost"
-            >
-              Continue Viewing
-            </Button>
           </div>
         </CardContent>
       </Card>
