@@ -44,23 +44,6 @@ export function PuzzleCompletion({ puzzle, isLastPuzzle = false }: PuzzleComplet
             }
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-muted-foreground" />
-              <span>
-                {completedAtDate 
-                  ? `Completed on ${completedAtDate.toLocaleDateString()} at ${completedAtDate.toLocaleTimeString()}`
-                  : 'Completed just now'
-                }
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-muted-foreground" />
-              <span>{uniqueContributors} contributor{uniqueContributors !== 1 ? 's' : ''} participated</span>
-            </div>
-          </div>
-        </CardContent>
       </Card>
     </div>
   )
