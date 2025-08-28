@@ -177,29 +177,6 @@ export function QRCodeGrid({ puzzle }: QRCodeGridProps) {
         })}
       </div>
 
-      {/* Instructions Footer */}
-      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
-        <CardContent className="pt-4 sm:pt-6">
-          <div className="text-center space-y-2">
-            <h3 className="font-semibold text-blue-800 text-sm sm:text-base">Ready to contribute?</h3>
-            <p className="text-xs sm:text-sm text-blue-700">
-              Scan any QR code above with your smartphone to start playing mini-games and unlock puzzle pieces!
-            </p>
-            <div className="flex justify-center gap-3 sm:gap-4 text-xs text-blue-600">
-              <span className="flex items-center gap-1">
-                <Target className="w-3 h-3" />
-                <span className="hidden sm:inline">Available pieces</span>
-                <span className="sm:hidden">Available</span>
-              </span>
-              <span className="flex items-center gap-1">
-                <CheckCircle className="w-3 h-3" />
-                <span className="hidden sm:inline">Completed pieces</span>
-                <span className="sm:hidden">Done</span>
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Print Styles */}
       <style jsx global>{`

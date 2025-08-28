@@ -6,23 +6,14 @@ import mongoose from 'mongoose';
 // GET /api/sessions/[id] - Get a specific session
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectToDatabase();
     
-    const { id } = params;
+    const { id } = await params;
     
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid session ID' },
-        { status: 400 }
-      );
-    }
-    
-    const session = await PuzzleSession.findById(id)
-      .populate('puzzleId', 'title imageUrl rows cols difficulty category')
-      .lean();
+    const session = await PuzzleSession.findById(id).lean();
     
     if (!session) {
       return NextResponse.json(
@@ -48,21 +39,15 @@ export async function GET(
 // PUT /api/sessions/[id] - Update a session
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectToDatabase();
     
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid session ID' },
-        { status: 400 }
-      );
-    }
-    
+    // Remove fields that shouldn't be updated
     const { _id, createdAt, __v, ...updateData } = body;
     
     const session = await PuzzleSession.findByIdAndUpdate(
@@ -96,19 +81,12 @@ export async function PUT(
 // DELETE /api/sessions/[id] - End a session
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectToDatabase();
     
-    const { id } = params;
-    
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid session ID' },
-        { status: 400 }
-      );
-    }
+    const { id } = await params;
     
     const session = await PuzzleSession.findByIdAndUpdate(
       id,
@@ -129,7 +107,8 @@ export async function DELETE(
     
     return NextResponse.json({
       success: true,
-      message: 'Session ended successfully'
+      message: 'Session ended successfully',
+      data: session
     });
     
   } catch (error) {

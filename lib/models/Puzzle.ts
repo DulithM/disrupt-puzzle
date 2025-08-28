@@ -129,14 +129,12 @@ const PuzzleSchema = new Schema<IPuzzle>({
   toObject: { virtuals: true }
 });
 
-// Indexes for better query performance
+// Indexes for better query performance (removed duplicates)
 PuzzleSchema.index({ title: 'text', description: 'text', tags: 'text' });
 PuzzleSchema.index({ isActive: 1, difficulty: 1, category: 1 });
 PuzzleSchema.index({ createdAt: -1 });
 PuzzleSchema.index({ currentPlayers: -1 });
 PuzzleSchema.index({ exhibitionId: 1 });
-PuzzleSchema.index({ unlockCode: 1 });
-PuzzleSchema.index({ 'pieces.unlockCode': 1 });
 
 // Virtual for total pieces
 PuzzleSchema.virtual('totalPieces').get(function() {

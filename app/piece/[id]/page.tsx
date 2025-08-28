@@ -17,20 +17,45 @@ export default function PiecePage() {
   const [piece, setPiece] = useState<PuzzlePiece | null>(null)
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [gameCompleted, setGameCompleted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     const loadPiece = async () => {
       try {
-        const pieceData = await puzzleApi.getPiece(pieceId)
-        if (pieceData) {
-          setPiece(pieceData)
-          const puzzleData = await puzzleApi.getPuzzle(pieceData.puzzleId)
-          setPuzzle(puzzleData)
+        setLoading(true)
+        setError(null)
+        
+        // First, get all puzzles to find which one contains this piece
+        const puzzles = await puzzleApi.getAllPuzzles()
+        if (puzzles.length === 0) {
+          setError("No puzzles found")
+          return
+        }
+        
+        // Find the puzzle that contains this piece
+        let foundPuzzle: Puzzle | null = null
+        let foundPiece: PuzzlePiece | null = null
+        
+        for (const puzzleData of puzzles) {
+          const pieceData = puzzleData.pieces.find(p => p.id === pieceId)
+          if (pieceData) {
+            foundPuzzle = puzzleData
+            foundPiece = pieceData
+            break
+          }
+        }
+        
+        if (foundPuzzle && foundPiece) {
+          setPuzzle(foundPuzzle)
+          setPiece(foundPiece)
+        } else {
+          setError("Piece not found in any puzzle")
         }
       } catch (error) {
         console.error("Failed to load piece:", error)
+        setError("Failed to load piece data")
       } finally {
         setLoading(false)
       }
@@ -71,6 +96,7 @@ export default function PiecePage() {
       router.push("/")
     } catch (error) {
       console.error("Failed to submit piece:", error)
+      setError("Failed to place piece. Please try again.")
       setIsSubmitting(false)
     }
   }
@@ -82,6 +108,28 @@ export default function PiecePage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading puzzle piece...</p>
         </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Error Loading Piece</CardTitle>
+            <CardDescription>{error}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button onClick={() => window.location.reload()} className="w-full">
+              Try Again
+            </Button>
+            <Button variant="outline" onClick={() => router.push("/")} className="w-full">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Main Puzzle
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }

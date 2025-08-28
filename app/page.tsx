@@ -10,14 +10,47 @@ import { PuzzleBoard } from "@/components/puzzle-board"
 export default function HomePage() {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const loadPuzzle = async () => {
       try {
-        const puzzleData = await puzzleApi.getPuzzle("sample-puzzle-1")
-        setPuzzle(puzzleData)
+        setLoading(true)
+        setError(null)
+        
+        // Get all available puzzles and use the first one
+        const puzzles = await puzzleApi.getAllPuzzles()
+        console.log('🔍 Puzzles received:', puzzles)
+        
+        if (puzzles.length > 0) {
+          const firstPuzzle = puzzles[0]
+          console.log('🔍 First puzzle object:', firstPuzzle)
+          console.log('🔍 First puzzle ID:', firstPuzzle.id)
+          console.log('🔍 First puzzle _id:', (firstPuzzle as any)._id)
+          
+          // Try to get the puzzle using either id or _id
+          const puzzleId = firstPuzzle.id || (firstPuzzle as any)._id
+          console.log('🔍 Using puzzle ID:', puzzleId)
+          
+          if (puzzleId) {
+            const puzzleData = await puzzleApi.getPuzzle(puzzleId)
+            if (puzzleData) {
+              console.log('✅ Puzzle loaded successfully:', puzzleData.title)
+              console.log('✅ Pieces count:', puzzleData.pieces.length)
+              console.log('✅ Completed pieces:', puzzleData.pieces.filter(p => p.isPlaced).length)
+              setPuzzle(puzzleData)
+            } else {
+              setError("Failed to load puzzle data")
+            }
+          } else {
+            setError("Puzzle ID not found")
+          }
+        } else {
+          setError("No puzzles found. Please seed the database first.")
+        }
       } catch (error) {
         console.error("Failed to load puzzle:", error)
+        setError("Failed to load puzzle. Please check the database connection.")
       } finally {
         setLoading(false)
       }
@@ -30,9 +63,19 @@ export default function HomePage() {
     let unsubscribe = () => {}
 
     if (puzzle) {
-      unsubscribe = puzzleApi.subscribe(puzzle.id, (updatedPuzzle) => {
-        setPuzzle(updatedPuzzle)
-      })
+      // Get the correct puzzle ID for subscription
+      const puzzleId = puzzle.id || (puzzle as any)._id
+      console.log('🔍 Setting up subscription for puzzle:', puzzleId)
+      
+      if (puzzleId) {
+        unsubscribe = puzzleApi.subscribe(puzzleId, (updatedPuzzle) => {
+          console.log('🔄 Puzzle updated via subscription:', updatedPuzzle.title)
+          console.log('🔄 New completed pieces:', updatedPuzzle.pieces.filter(p => p.isPlaced).length)
+          setPuzzle(updatedPuzzle)
+        })
+      } else {
+        console.warn('⚠️ Cannot subscribe: puzzle ID is undefined')
+      }
     }
 
     return () => {
@@ -46,6 +89,19 @@ export default function HomePage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading puzzle...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
         </div>
       </div>
     )
