@@ -14,7 +14,7 @@ A simple, user-free puzzle exhibition system where visitors scan QR codes to unl
 - Each puzzle piece has a unique QR code
 - Visitors scan codes to unlock pieces
 - No user accounts or login required
-- Simple unlock codes like: `mountain_landscape_2024_piece_0_0`
+- Simple unlock codes like: `disrupt_asia_2017_piece_0_0`
 
 ### 3. **Real-time Updates**
 - WebSocket connection for instant updates
@@ -80,11 +80,10 @@ After running the seeder, you'll get instructions for creating QR codes:
 
 ## 📊 Sample Puzzles Included
 
-- **Mountain Landscape** (4x6) - Easy
-- **Vintage Street Scene** (5x7) - Medium  
-- **Ocean Sunset** (6x8) - Hard
-- **City Skyline** (4x5) - Easy
-- **Forest Path** (5x6) - Medium
+- **Disrupt Asia 2016** (5x7) - Medium
+- **Disrupt Asia 2017** (4x6) - Easy  
+- **Disrupt Asia 2018** (6x8) - Hard
+- **Disrupt Asia 2019** (4x5) - Easy
 
 ## 🌐 API Endpoints
 

@@ -18,9 +18,9 @@ export async function GET(
         id: id,
         row: Math.floor(pieceNumber / 6), // Assuming 6 columns for first puzzle
         col: pieceNumber % 6,
-        imageUrl: '/mountain-landscape-puzzle.png',
+        imageUrl: '/puzzles/DA-2017-19.jpg',
         isPlaced: false,
-        unlockCode: `mountain_landscape_2024_piece_${pieceNumber}`,
+        unlockCode: `disrupt_asia_2017_piece_${pieceNumber}`,
         originalPosition: {
           row: Math.floor(pieceNumber / 6),
           col: pieceNumber % 6

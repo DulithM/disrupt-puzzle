@@ -4,69 +4,56 @@ import { printQRCodeInstructions } from './qr-generator';
 
 const samplePuzzles = [
   {
-    title: 'Vintage Street Scene',
-    description: 'A nostalgic view of an old European street with cobblestones and historic buildings',
-    imageUrl: '/vintage-street-scene.png',
+    title: 'Disrupt Asia 2016',
+    description: 'A glimpse into the innovative spirit of Disrupt Asia 2016',
+    imageUrl: '/puzzles/DA-2016-7.jpg',
     rows: 5,
     cols: 7,
     difficulty: 'medium',
     category: 'exhibition',
-    tags: ['street', 'vintage', 'architecture', 'urban'],
+    tags: ['disrupt-asia', '2016', 'innovation', 'technology'],
     maxPlayers: 50,
     exhibitionId: 'main-exhibition',
-    unlockCode: 'vintage_street_2024'
+    unlockCode: 'disrupt_asia_2016'
   },
   {
-    title: 'Mountain Landscape',
-    description: 'A beautiful mountain landscape with snow-capped peaks and lush valleys',
-    imageUrl: '/mountain-landscape-puzzle.png',
+    title: 'Disrupt Asia 2017',
+    description: 'Celebrating the breakthroughs and connections of Disrupt Asia 2017',
+    imageUrl: '/puzzles/DA-2017-19.jpg',
     rows: 4,
     cols: 6,
     difficulty: 'easy',
     category: 'exhibition',
-    tags: ['mountains', 'landscape', 'nature', 'scenic'],
+    tags: ['disrupt-asia', '2017', 'startups', 'networking'],
     maxPlayers: 50,
     exhibitionId: 'main-exhibition',
-    unlockCode: 'mountain_landscape_2024'
+    unlockCode: 'disrupt_asia_2017'
   },
   {
-    title: 'Ocean Sunset',
-    description: 'A breathtaking ocean sunset with golden skies and calm waters',
-    imageUrl: '/Ocean Sunset.png',
+    title: 'Disrupt Asia 2018',
+    description: 'The future of technology unveiled at Disrupt Asia 2018',
+    imageUrl: '/puzzles/DA-2018-17.jpg',
     rows: 6,
     cols: 8,
     difficulty: 'hard',
     category: 'exhibition',
-    tags: ['ocean', 'sunset', 'nature', 'water'],
+    tags: ['disrupt-asia', '2018', 'future-tech', 'disruption'],
     maxPlayers: 50,
     exhibitionId: 'main-exhibition',
-    unlockCode: 'ocean_sunset_2024'
+    unlockCode: 'disrupt_asia_2018'
   },
   {
-    title: 'City Skyline',
-    description: 'Modern city skyline with towering skyscrapers and urban architecture',
-    imageUrl: '/City Skyline.png',
+    title: 'Disrupt Asia 2019',
+    description: 'Building tomorrow\'s solutions at Disrupt Asia 2019',
+    imageUrl: '/puzzles/DA-2019-9.jpg',
     rows: 4,
     cols: 5,
     difficulty: 'easy',
     category: 'exhibition',
-    tags: ['city', 'skyline', 'architecture', 'modern'],
+    tags: ['disrupt-asia', '2019', 'solutions', 'entrepreneurship'],
     maxPlayers: 50,
     exhibitionId: 'main-exhibition',
-    unlockCode: 'city_skyline_2024'
-  },
-  {
-    title: 'Forest Path',
-    description: 'A serene forest path surrounded by tall trees and natural beauty',
-    imageUrl: '/Forest Path.png',
-    rows: 5,
-    cols: 6,
-    difficulty: 'medium',
-    category: 'exhibition',
-    tags: ['forest', 'nature', 'path', 'trees'],
-    maxPlayers: 50,
-    exhibitionId: 'main-exhibition',
-    unlockCode: 'forest_path_2024'
+    unlockCode: 'disrupt_asia_2019'
   }
 ];
 

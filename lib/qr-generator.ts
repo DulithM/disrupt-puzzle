@@ -45,34 +45,28 @@ export function generateQRCodeData(puzzleUnlockCode: string, puzzleTitle: string
 export function generateSampleQRCodes() {
   const puzzles = [
     {
-      unlockCode: 'mountain_landscape_2024',
-      title: 'Mountain Landscape',
-      rows: 4,
-      cols: 6
-    },
-    {
-      unlockCode: 'vintage_street_2024',
-      title: 'Vintage Street Scene',
+      unlockCode: 'disrupt_asia_2016',
+      title: 'Disrupt Asia 2016',
       rows: 5,
       cols: 7
     },
     {
-      unlockCode: 'ocean_sunset_2024',
-      title: 'Ocean Sunset',
+      unlockCode: 'disrupt_asia_2017',
+      title: 'Disrupt Asia 2017',
+      rows: 4,
+      cols: 6
+    },
+    {
+      unlockCode: 'disrupt_asia_2018',
+      title: 'Disrupt Asia 2018',
       rows: 6,
       cols: 8
     },
     {
-      unlockCode: 'city_skyline_2024',
-      title: 'City Skyline',
+      unlockCode: 'disrupt_asia_2019',
+      title: 'Disrupt Asia 2019',
       rows: 4,
       cols: 5
-    },
-    {
-      unlockCode: 'forest_path_2024',
-      title: 'Forest Path',
-      rows: 5,
-      cols: 6
     }
   ];
 
