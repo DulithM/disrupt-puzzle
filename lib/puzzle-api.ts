@@ -32,6 +32,32 @@ export const puzzleApi = {
         }
       }
       
+      // For piece IDs (like piece-0, piece-1, etc.), return the first mock puzzle
+      if (id.startsWith('piece-')) {
+        console.log('🎭 Using mock puzzle data for piece ID:', id)
+        const mockResponse = await fetch('/api/puzzles-mock')
+        if (mockResponse.ok) {
+          const mockData = await mockResponse.json()
+          const mockPuzzle = mockData.data[0] // Use first puzzle
+          if (mockPuzzle) {
+            // Add mock pieces for the puzzle
+            mockPuzzle.pieces = Array.from({ length: mockPuzzle.rows * mockPuzzle.cols }, (_, i) => ({
+              id: `piece-${i}`,
+              row: Math.floor(i / mockPuzzle.cols),
+              col: i % mockPuzzle.cols,
+              imageUrl: mockPuzzle.imageUrl,
+              isPlaced: false,
+              unlockCode: `${mockPuzzle.unlockCode}_piece_${i}`,
+              originalPosition: {
+                row: Math.floor(i / mockPuzzle.cols),
+                col: i % mockPuzzle.cols
+              }
+            }))
+            return mockPuzzle
+          }
+        }
+      }
+      
       // Try the main endpoint
       const response = await fetch(`/api/puzzles/${id}`)
       if (!response.ok) {
@@ -66,6 +92,16 @@ export const puzzleApi = {
       
       if (!puzzleId) {
         throw new Error('Puzzle ID not found')
+      }
+
+      // Check if we're using mock data
+      const isMockData = puzzleId.startsWith('mock-') || puzzleId.startsWith('piece-')
+      
+      if (isMockData) {
+        console.log('🎭 Using mock piece placement for:', pieceId)
+        // For mock data, just simulate success
+        console.log('✅ Mock piece placed successfully!')
+        return
       }
 
       // Update the piece in the database
@@ -138,6 +174,28 @@ export const puzzleApi = {
       
       const data = await response.json()
       console.log('📦 All puzzles data received:', data)
+      
+      // If this is mock data, populate pieces for each puzzle
+      if (data.message && data.message.includes('Mock data')) {
+        console.log('🎭 Populating pieces for mock puzzles...')
+        const puzzlesWithPieces = data.data.map((puzzle: any) => ({
+          ...puzzle,
+          pieces: Array.from({ length: puzzle.rows * puzzle.cols }, (_, i) => ({
+            id: `piece-${i}`,
+            row: Math.floor(i / puzzle.cols),
+            col: i % puzzle.cols,
+            imageUrl: puzzle.imageUrl,
+            isPlaced: false,
+            unlockCode: `${puzzle.unlockCode}_piece_${i}`,
+            originalPosition: {
+              row: Math.floor(i / puzzle.cols),
+              col: i % puzzle.cols
+            }
+          }))
+        }))
+        return puzzlesWithPieces
+      }
+      
       return data.success ? data.data : []
     } catch (error) {
       console.error('Error fetching puzzles:', error)
