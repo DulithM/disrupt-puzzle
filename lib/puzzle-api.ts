@@ -5,6 +5,34 @@ export const puzzleApi = {
   async getPuzzle(id: string): Promise<Puzzle | null> {
     try {
       console.log('🔍 Fetching puzzle with ID:', id)
+      
+      // For mock data, return the first puzzle if ID is mock-1 or mock-2
+      if (id.startsWith('mock-')) {
+        console.log('🎭 Using mock puzzle data for ID:', id)
+        const mockResponse = await fetch('/api/puzzles-mock')
+        if (mockResponse.ok) {
+          const mockData = await mockResponse.json()
+          const mockPuzzle = mockData.data.find((p: any) => p._id === id)
+          if (mockPuzzle) {
+            // Add some mock pieces for the puzzle
+            mockPuzzle.pieces = Array.from({ length: mockPuzzle.rows * mockPuzzle.cols }, (_, i) => ({
+              id: `piece-${i}`,
+              row: Math.floor(i / mockPuzzle.cols),
+              col: i % mockPuzzle.cols,
+              imageUrl: mockPuzzle.imageUrl,
+              isPlaced: false,
+              unlockCode: `${mockPuzzle.unlockCode}_piece_${i}`,
+              originalPosition: {
+                row: Math.floor(i / mockPuzzle.cols),
+                col: i % mockPuzzle.cols
+              }
+            }))
+            return mockPuzzle
+          }
+        }
+      }
+      
+      // Try the main endpoint
       const response = await fetch(`/api/puzzles/${id}`)
       if (!response.ok) {
         throw new Error(`Failed to fetch puzzle: ${response.statusText}`)
@@ -94,10 +122,20 @@ export const puzzleApi = {
   async getAllPuzzles(): Promise<Puzzle[]> {
     try {
       console.log('🔍 Fetching all puzzles...')
-      const response = await fetch('/api/puzzles')
+      
+      // Try the main endpoint first
+      let response = await fetch('/api/puzzles')
+      
+      // If main endpoint fails, fallback to mock data
+      if (!response.ok) {
+        console.log('⚠️ Main puzzles endpoint failed, using mock data...')
+        response = await fetch('/api/puzzles-mock')
+      }
+      
       if (!response.ok) {
         throw new Error(`Failed to fetch puzzles: ${response.statusText}`)
       }
+      
       const data = await response.json()
       console.log('📦 All puzzles data received:', data)
       return data.success ? data.data : []
