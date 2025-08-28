@@ -90,6 +90,22 @@ export default function QRCodesPage() {
       console.log(`🎉 QR Codes - Puzzle "${puzzle.title}" completed, checking for next puzzle...`)
       console.log(`🎉 QR Codes - Current index: ${currentPuzzleIndex}, Total puzzles: ${allPuzzles.length}`)
       
+      // Immediately reset the current puzzle
+      const currentPuzzleData = allPuzzles[currentPuzzleIndex]
+      const currentPuzzleId = currentPuzzleData.id || (currentPuzzleData as any)._id
+      if (currentPuzzleId) {
+        console.log(`🔄 QR Codes - Resetting completed puzzle: ${currentPuzzleData.title}`)
+        puzzleApi.resetPuzzle(currentPuzzleId).then((resetSuccess) => {
+          if (resetSuccess) {
+            console.log(`✅ QR Codes - Successfully reset: ${currentPuzzleData.title}`)
+          } else {
+            console.error(`❌ QR Codes - Failed to reset: ${currentPuzzleData.title}`)
+          }
+        }).catch(error => {
+          console.error(`❌ QR Codes - Error resetting puzzle:`, error)
+        })
+      }
+      
       const nextIndex = currentPuzzleIndex + 1
       if (nextIndex < allPuzzles.length) {
         // Move to next puzzle

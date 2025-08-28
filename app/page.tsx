@@ -154,6 +154,21 @@ export default function HomePage() {
   // Handle puzzle completion
   const handlePuzzleCompletion = async () => {
     console.log(`🎉 Puzzle ${currentPuzzleIndex + 1}/${allPuzzles.length} completed!`)
+    
+    // Immediately reset the current puzzle
+    const currentPuzzleData = allPuzzles[currentPuzzleIndex]
+    const currentPuzzleId = currentPuzzleData.id || (currentPuzzleData as any)._id
+    if (currentPuzzleId) {
+      console.log(`🔄 Resetting completed puzzle: ${currentPuzzleData.title}`)
+      const resetSuccess = await puzzleApi.resetPuzzle(currentPuzzleId)
+      if (resetSuccess) {
+        console.log(`✅ Successfully reset: ${currentPuzzleData.title}`)
+      } else {
+        console.error(`❌ Failed to reset: ${currentPuzzleData.title}`)
+      }
+    }
+    
+    // Then move to next puzzle
     await moveToNextPuzzle()
   }
 
@@ -318,7 +333,6 @@ export default function HomePage() {
       {/* Puzzle completion modal */}
       <PuzzleCompletion 
         puzzle={puzzle} 
-        onReset={handlePuzzleCompletion}
         isLastPuzzle={currentPuzzleIndex === allPuzzles.length - 1}
       />
     </div>
