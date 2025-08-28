@@ -15,8 +15,23 @@ const connection: ConnectionState = {
   isConnected: false,
 };
 
+// For Vercel serverless environment
+declare global {
+  var mongoose: {
+    conn: typeof mongoose | null;
+    promise: Promise<typeof mongoose> | null;
+  } | undefined;
+}
+
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
 export async function connectToDatabase() {
   if (connection.isConnected) {
+    console.log('✅ Using existing MongoDB connection');
     return;
   }
 
@@ -27,9 +42,10 @@ export async function connectToDatabase() {
     
     const db = await mongoose.connect(MONGODB_URI, {
       dbName: DB_NAME,
-      maxPoolSize: 10,
+      maxPoolSize: 1, // Reduce for serverless
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
+      bufferCommands: false, // Disable mongoose buffering
     });
 
     connection.isConnected = db.connections[0].readyState === 1;
