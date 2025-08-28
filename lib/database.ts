@@ -21,17 +21,31 @@ export async function connectToDatabase() {
   }
 
   try {
+    console.log('🔌 Attempting to connect to MongoDB...');
+    console.log('📊 Database URI:', MONGODB_URI ? 'Set' : 'Not set');
+    console.log('📊 Database Name:', DB_NAME);
+    
     const db = await mongoose.connect(MONGODB_URI, {
       dbName: DB_NAME,
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
     });
 
     connection.isConnected = db.connections[0].readyState === 1;
     
     if (connection.isConnected) {
       console.log('✅ Connected to MongoDB successfully');
+    } else {
+      console.log('⚠️ MongoDB connection state:', db.connections[0].readyState);
     }
   } catch (error) {
     console.error('❌ MongoDB connection error:', error);
+    console.error('❌ Error details:', {
+      name: (error as any).name,
+      message: (error as any).message,
+      code: (error as any).code
+    });
     throw error;
   }
 }

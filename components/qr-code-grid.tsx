@@ -61,11 +61,6 @@ export function QRCodeGrid({ puzzle }: QRCodeGridProps) {
           <h2 className="text-xl sm:text-2xl font-bold">Puzzle Piece QR Codes</h2>
           <p className="text-sm sm:text-base text-muted-foreground">Scan any code to start playing and unlock pieces</p>
         </div>
-        <Button onClick={printAllQRCodes} variant="outline" size="sm">
-          <Printer className="w-4 h-4 mr-2" />
-          <span className="hidden sm:inline">Print All</span>
-          <span className="sm:hidden">Print</span>
-        </Button>
       </div>
 
       {/* QR Code Grid */}

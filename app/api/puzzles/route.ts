@@ -58,8 +58,21 @@ export async function GET(request: NextRequest) {
     
   } catch (error) {
     console.error('Error fetching puzzles:', error);
+    console.error('Error details:', {
+      name: (error as any).name,
+      message: (error as any).message,
+      code: (error as any).code,
+      stack: (error as any).stack
+    });
+    
+    // Return more specific error information
+    const errorMessage = (error as any).message || 'Failed to fetch puzzles';
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch puzzles' },
+      { 
+        success: false, 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? (error as any).stack : undefined
+      },
       { status: 500 }
     );
   }
