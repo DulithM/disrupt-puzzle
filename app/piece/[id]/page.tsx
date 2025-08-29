@@ -8,6 +8,7 @@ import { ArrowLeft, CheckCircle, Target, AlertTriangle } from "lucide-react"
 import { puzzleApi } from "@/lib/puzzle-api"
 import type { PuzzlePiece, Puzzle } from "@/lib/types"
 import { MiniPuzzleGame } from "@/components/mini-puzzle-game"
+import Image from "next/image"
 
 export default function PiecePage() {
   const params = useParams()
@@ -138,11 +139,9 @@ export default function PiecePage() {
     }
   }
 
-
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cyan-100 via-white to-orange-100">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading...</p>
@@ -153,9 +152,18 @@ export default function PiecePage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-cyan-100 via-white to-orange-100">
         <Card className="w-full max-w-sm">
           <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <Image
+                src="/logos/logo-02.png"
+                alt="Disrupt Asia 2025"
+                width={120}
+                height={60}
+                className="object-contain"
+              />
+            </div>
             <CardTitle className="text-lg">Error</CardTitle>
             <CardDescription>{error}</CardDescription>
           </CardHeader>
@@ -175,9 +183,18 @@ export default function PiecePage() {
 
   if (!piece || !puzzle) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-cyan-100 via-white to-orange-100">
         <Card className="w-full max-w-sm">
           <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <Image
+                src="/logos/logo-02.png"
+                alt="Disrupt Asia 2025"
+                width={120}
+                height={60}
+                className="object-contain"
+              />
+            </div>
             <CardTitle className="text-lg">Piece Not Found</CardTitle>
             <CardDescription>The requested puzzle piece could not be loaded.</CardDescription>
           </CardHeader>
@@ -195,9 +212,18 @@ export default function PiecePage() {
   // Show warning if piece belongs to completed/inactive puzzle
   if (puzzleCompleted) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-cyan-100 via-white to-orange-100">
         <Card className="w-full max-w-sm">
           <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <Image
+                src="/logos/logo-02.png"
+                alt="Disrupt Asia 2025"
+                width={120}
+                height={60}
+                className="object-contain"
+              />
+            </div>
             <CardTitle className="flex items-center justify-center gap-2 text-orange-600">
               <AlertTriangle className="w-5 h-5" />
               Puzzle Completed
@@ -227,34 +253,36 @@ export default function PiecePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Simple Header */}
-      <div className="flex items-center p-4 border-b">
-        <Button variant="ghost" onClick={() => router.push("/")} size="sm">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
-        <div className="ml-4">
-          <h1 className="text-lg font-semibold">Puzzle Challenge</h1>
-          <p className="text-sm text-muted-foreground">
-            Piece ({piece.row + 1}, {piece.col + 1})
-          </p>
-        </div>
-      </div>
-
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-cyan-100 via-white to-orange-100">
       {/* Game Content */}
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md space-y-6">
           {/* Game Card */}
-          <Card className="border-0 shadow-lg">
-            <CardHeader className="text-center pb-4">
-              <CardTitle className="flex items-center justify-center gap-2">
-                <Target className="w-5 h-5 text-blue-600" />
-                Mini Puzzle
-              </CardTitle>
-              <CardDescription>
-                Complete the challenge to unlock this piece
-              </CardDescription>
+          <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
+            <CardHeader className="text-center pb-4 pt-8">
+              <div className="flex items-center justify-center space-x-2 sm:space-x-3 mb-6">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 relative">
+                  <Image
+                    src="/logos/logo-01.png"
+                    alt="Disrupt Asia Logo"
+                    width={80}
+                    height={80}
+                    className="object-contain scale-150"
+                  />
+                </div>
+                <div className="hidden sm:block">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                    Disrupt <span className="text-red-600">Asia</span> 2025
+                  </h2>
+                  <p className="text-xs sm:text-sm font-bold text-cyan-600">Puzzle Challenge</p>
+                </div>
+                <div className="sm:hidden">
+                  <h2 className="text-lg font-bold text-gray-900">
+                    Disrupt <span className="text-red-600">Asia</span>
+                  </h2>
+                  <p className="text-xs font-bold text-cyan-600">2025</p>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <MiniPuzzleGame 
@@ -265,7 +293,14 @@ export default function PiecePage() {
                 pieceSubmitted={pieceSubmitted}
               />
             </CardContent>
-          </Card> 
+          </Card>
+          
+          {/* Footer Branding */}
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">
+              Part of the Disrupt Asia 2025 Interactive Experience
+            </p>
+          </div>
         </div>
       </div>
     </div>
