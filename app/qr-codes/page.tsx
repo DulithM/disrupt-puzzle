@@ -190,7 +190,7 @@ export default function QRCodesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading QR codes...</p>
@@ -201,7 +201,7 @@ export default function QRCodesPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
           <p className="text-muted-foreground mb-4">{error}</p>
           <Button onClick={() => window.location.reload()}>
@@ -218,7 +218,7 @@ export default function QRCodesPage() {
 
   if (!puzzle) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Puzzle not found</p>
           <Button onClick={() => router.push("/")}>
@@ -235,7 +235,7 @@ export default function QRCodesPage() {
   const completionPercentage = Math.round((completedPieces / totalPieces) * 100)
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-4 sm:py-8">
         <div className="flex items-center justify-between mb-4 sm:mb-6">
           <Button variant="ghost" onClick={() => router.push("/")}>

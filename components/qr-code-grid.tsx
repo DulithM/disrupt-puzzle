@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Download, Printer, Copy, Check, Target, CheckCircle, Clock, Zap } from "lucide-react"
+import { Download, Copy, Check, Target, CheckCircle, Clock, Zap } from "lucide-react"
 import { QRCode } from "./qr-code"
 import { puzzleApi } from "@/lib/puzzle-api"
 import type { Puzzle } from "@/lib/types"
@@ -37,9 +37,7 @@ export function QRCodeGrid({ puzzle }: QRCodeGridProps) {
     link.click()
   }
 
-  const printAllQRCodes = () => {
-    window.print()
-  }
+
 
   const completePiece = async (pieceId: string) => {
     if (completingPiece) return // Prevent multiple clicks
@@ -115,16 +113,7 @@ export function QRCodeGrid({ puzzle }: QRCodeGridProps) {
         </div>
       </div>
 
-      {/* Development Notice */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Zap className="w-4 h-4 text-yellow-600" />
-          <span className="font-medium text-yellow-800">Development Mode</span>
-        </div>
-        <p className="text-sm text-yellow-700">
-          Use the "Complete" buttons below to quickly test puzzle progression without playing the mini-games.
-        </p>
-      </div>
+
 
       {/* QR Code Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
@@ -264,15 +253,6 @@ export function QRCodeGrid({ puzzle }: QRCodeGridProps) {
 
       {/* Bulk Actions */}
       <div className="flex flex-wrap gap-2 justify-center">
-        <Button
-          variant="outline"
-          onClick={printAllQRCodes}
-          className="text-sm"
-        >
-          <Printer className="w-4 h-4 mr-2" />
-          Print All QR Codes
-        </Button>
-        
         <Button
           variant="default"
           onClick={async () => {

@@ -35,7 +35,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Disrupt Puzzle" />
         <meta name="theme-color" content="#000000" />
       </head>
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-gradient-to-br from-cyan-100 via-white to-orange-100 min-h-screen`}>
         {children}
         <Toaster />
       </body>

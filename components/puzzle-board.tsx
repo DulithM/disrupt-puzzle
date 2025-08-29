@@ -48,7 +48,7 @@ export function PuzzleBoard({ puzzle }: PuzzleBoardProps) {
                   <div className="w-full h-full flex items-center justify-center bg-white p-1">
                     <QRCode
                       value={`${typeof window !== 'undefined' ? window.location.origin : ''}/piece/${piece.id}`}
-                      size={Math.min(80, Math.min(window.innerWidth / cols - 10, window.innerHeight / rows - 10))}
+                      size={Math.min(120, Math.min(window.innerWidth / cols - 8, window.innerHeight / rows - 8))}
                       className="w-full h-full object-contain"
                     />
                   </div>

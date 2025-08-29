@@ -14,6 +14,8 @@ interface MiniPuzzleGameProps {
   piece: PuzzlePiece
   onSuccess: () => void
   onFailure: () => void
+  isSubmitting?: boolean
+  pieceSubmitted?: boolean
 }
 
 interface PuzzleFragment {
@@ -38,7 +40,7 @@ const FRAGMENT_COLORS = [
   "bg-yellow-400 border-yellow-600",
 ]
 
-export function MiniPuzzleGame({ piece, onSuccess, onFailure }: MiniPuzzleGameProps) {
+export function MiniPuzzleGame({ piece, onSuccess, onFailure, isSubmitting = false, pieceSubmitted = false }: MiniPuzzleGameProps) {
   const [gameState, setGameState] = useState<"waiting" | "playing" | "success" | "failure">("waiting")
   const [timeLeft, setTimeLeft] = useState(90) // Increased time to 90 seconds
   const [fragments, setFragments] = useState<PuzzleFragment[]>([])
@@ -440,7 +442,7 @@ export function MiniPuzzleGame({ piece, onSuccess, onFailure }: MiniPuzzleGamePr
           </div>
         )}
 
-        {gameState === "success" && (
+        {gameState === "success" && !pieceSubmitted && (
           <div className="text-center space-y-4 sm:space-y-6">
             <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-4 sm:p-6 rounded-lg text-white">
               <Trophy className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3" />
@@ -477,9 +479,39 @@ export function MiniPuzzleGame({ piece, onSuccess, onFailure }: MiniPuzzleGamePr
               </div>
             </div>
 
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
-              <p className="text-green-800 font-medium text-sm sm:text-base">
-                🎉 You can now claim this puzzle piece!
+            <Button 
+              onClick={onSuccess} 
+              disabled={isSubmitting}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium py-3 disabled:opacity-50"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Adding Piece...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Add to Puzzle
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+
+        {pieceSubmitted && (
+          <div className="text-center space-y-4 sm:space-y-6">
+            <div className="bg-gradient-to-r from-blue-500 to-cyan-600 p-4 sm:p-6 rounded-lg text-white">
+              <CheckCircle className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3" />
+              <h3 className="text-xl sm:text-2xl font-bold mb-2">Thank You!</h3>
+              <p className="text-blue-100 text-sm sm:text-base">
+                Your piece has been added to the puzzle. This tab will close automatically in 5 seconds.
+              </p>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+              <p className="text-blue-800 font-medium text-sm sm:text-base">
+                You can now return to the main puzzle to see your contribution!
               </p>
             </div>
           </div>
