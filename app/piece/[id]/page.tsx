@@ -141,10 +141,10 @@ export default function PiecePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cyan-100 via-white to-orange-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cyan-100 via-white to-orange-100 p-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+          <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-primary mx-auto mb-3 sm:mb-4"></div>
+          <p className="text-sm sm:text-base text-muted-foreground">Loading...</p>
         </div>
       </div>
     )
@@ -152,10 +152,10 @@ export default function PiecePage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-cyan-100 via-white to-orange-100">
-        <Card className="w-full max-w-sm">
+      <div className="min-h-screen flex items-center justify-center p-2 sm:p-4 bg-gradient-to-br from-cyan-100 via-white to-orange-100">
+        <Card className="w-full max-w-xs sm:max-w-sm">
           <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
+            <div className="flex justify-center mb-3 sm:mb-4">
               <Image
                 src="/logos/logo-02.png"
                 alt="Disrupt Asia 2025"
@@ -164,14 +164,14 @@ export default function PiecePage() {
                 className="object-contain"
               />
             </div>
-            <CardTitle className="text-lg">Error</CardTitle>
-            <CardDescription>{error}</CardDescription>
+            <CardTitle className="text-base sm:text-lg">Error</CardTitle>
+            <CardDescription className="text-sm">{error}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <Button onClick={() => window.location.reload()} className="w-full">
+          <CardContent className="space-y-2 sm:space-y-3">
+            <Button onClick={() => window.location.reload()} className="w-full text-sm sm:text-base">
               Try Again
             </Button>
-            <Button variant="outline" onClick={() => router.push("/")} className="w-full">
+            <Button variant="outline" onClick={() => router.push("/")} className="w-full text-sm sm:text-base">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Puzzle
             </Button>
@@ -183,10 +183,10 @@ export default function PiecePage() {
 
   if (!piece || !puzzle) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-cyan-100 via-white to-orange-100">
-        <Card className="w-full max-w-sm">
+      <div className="min-h-screen flex items-center justify-center p-2 sm:p-4 bg-gradient-to-br from-cyan-100 via-white to-orange-100">
+        <Card className="w-full max-w-xs sm:max-w-sm">
           <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
+            <div className="flex justify-center mb-3 sm:mb-4">
               <Image
                 src="/logos/logo-02.png"
                 alt="Disrupt Asia 2025"
@@ -195,11 +195,11 @@ export default function PiecePage() {
                 className="object-contain"
               />
             </div>
-            <CardTitle className="text-lg">Piece Not Found</CardTitle>
-            <CardDescription>The requested puzzle piece could not be loaded.</CardDescription>
+            <CardTitle className="text-base sm:text-lg">Piece Not Found</CardTitle>
+            <CardDescription className="text-sm">The requested puzzle piece could not be loaded.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => router.push("/")} className="w-full">
+            <Button onClick={() => router.push("/")} className="w-full text-sm sm:text-base">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Puzzle
             </Button>
@@ -212,10 +212,10 @@ export default function PiecePage() {
   // Show warning if piece belongs to completed/inactive puzzle
   if (puzzleCompleted) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-cyan-100 via-white to-orange-100">
-        <Card className="w-full max-w-sm">
+      <div className="min-h-screen flex items-center justify-center p-2 sm:p-4 bg-gradient-to-br from-cyan-100 via-white to-orange-100">
+        <Card className="w-full max-w-xs sm:max-w-sm">
           <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
+            <div className="flex justify-center mb-3 sm:mb-4">
               <Image
                 src="/logos/logo-02.png"
                 alt="Disrupt Asia 2025"
@@ -224,21 +224,21 @@ export default function PiecePage() {
                 className="object-contain"
               />
             </div>
-            <CardTitle className="flex items-center justify-center gap-2 text-orange-600">
-              <AlertTriangle className="w-5 h-5" />
+            <CardTitle className="flex items-center justify-center gap-2 text-orange-600 text-base sm:text-lg">
+              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
               Puzzle Completed
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm">
               This piece belongs to a completed puzzle. 
               Current active puzzle: <strong>{currentActivePuzzle?.title || 'Unknown'}</strong>
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <Button onClick={() => router.push("/")} className="w-full">
+          <CardContent className="space-y-2 sm:space-y-3">
+            <Button onClick={() => router.push("/")} className="w-full text-sm sm:text-base">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Puzzle
             </Button>
-            <Button variant="outline" onClick={() => router.push("/qr-codes")} className="w-full">
+            <Button variant="outline" onClick={() => router.push("/qr-codes")} className="w-full text-sm sm:text-base">
               View QR Codes
             </Button>
           </CardContent>
@@ -255,36 +255,30 @@ export default function PiecePage() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-cyan-100 via-white to-orange-100">
       {/* Game Content */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md space-y-6">
+      <div className="flex-1 flex items-center justify-center p-2 sm:p-4">
+        <div className="w-full max-w-sm sm:max-w-md space-y-4 sm:space-y-6">
           {/* Game Card */}
           <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
-            <CardHeader className="text-center pb-4 pt-8">
-              <div className="flex items-center justify-center space-x-2 sm:space-x-3 mb-6">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 relative">
+            <CardHeader className="text-center pb-3 sm:pb-4 pt-6 sm:pt-8">
+              <div className="flex items-center justify-center space-x-3 sm:space-x-4 mb-4 sm:mb-6">
+                <div className="w-14 h-14 sm:w-12 sm:h-12 md:w-16 md:h-16 relative">
                   <Image
                     src="/logos/logo-01.png"
                     alt="Disrupt Asia Logo"
                     width={80}
                     height={80}
-                    className="object-contain scale-150"
+                    className="object-contain scale-150 sm:scale-150"
                   />
                 </div>
-                <div className="hidden sm:block">
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                <div className="block">
+                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
                     Disrupt <span className="text-red-600">Asia</span> 2025
                   </h2>
                   <p className="text-xs sm:text-sm font-bold text-cyan-600">Puzzle Challenge</p>
                 </div>
-                <div className="sm:hidden">
-                  <h2 className="text-lg font-bold text-gray-900">
-                    Disrupt <span className="text-red-600">Asia</span>
-                  </h2>
-                  <p className="text-xs font-bold text-cyan-600">2025</p>
-                </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-6">
               <GameManager 
                 piece={piece} 
                 onSuccess={handleGameSuccess} 
@@ -296,8 +290,8 @@ export default function PiecePage() {
           </Card>
           
           {/* Footer Branding */}
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">
+          <div className="text-center px-2">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Part of the Disrupt Asia 2025 Interactive Experience
             </p>
           </div>

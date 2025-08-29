@@ -218,13 +218,13 @@ export function TicTacToe({ piece, onSuccess, onFailure, isSubmitting = false, p
     return (
       <div
         key={index}
-        className={`aspect-square border-2 border-gray-300 flex items-center justify-center text-4xl font-bold cursor-pointer transition-all duration-200 hover:bg-gray-50 ${
+        className={`aspect-square border-2 border-gray-300 flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-bold cursor-pointer transition-all duration-200 hover:bg-gray-50 active:scale-95 ${
           isWinningCell ? 'bg-green-100 border-green-500' : ''
         } ${cell ? 'cursor-not-allowed' : 'hover:scale-105'}`}
         onClick={() => handleCellClick(index)}
       >
-        {cell === "X" && <X className="w-8 h-8 text-blue-600" />}
-        {cell === "O" && <Circle className="w-8 h-8 text-red-600" />}
+        {cell === "X" && <X className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />}
+        {cell === "O" && <Circle className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />}
       </div>
     )
   }
@@ -277,18 +277,18 @@ export function TicTacToe({ piece, onSuccess, onFailure, isSubmitting = false, p
         {gameState === "playing" && (
           <div className="space-y-4">
             {/* Game Stats */}
-            <div className="grid grid-cols-4 gap-1 sm:gap-2">
-              <Badge variant="outline" className="flex items-center gap-1 justify-center text-xs">
-                <Timer className="w-3 h-3" />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
+              <Badge variant="outline" className="flex items-center gap-1 justify-center text-xs sm:text-sm">
+                <Timer className="w-3 h-3 sm:w-4 sm:h-4" />
                 {formatTime(timeLeft)}
               </Badge>
-              <Badge variant="secondary" className="justify-center text-xs">Moves: {moves}</Badge>
-              <Badge variant="outline" className="justify-center text-xs">Turn: {currentPlayer}</Badge>
-              <Badge variant="outline" className="justify-center text-xs">AI: {aiDifficulty}</Badge>
+              <Badge variant="secondary" className="justify-center text-xs sm:text-sm">Moves: {moves}</Badge>
+              <Badge variant="outline" className="justify-center text-xs sm:text-sm">Turn: {currentPlayer}</Badge>
+              <Badge variant="outline" className="justify-center text-xs sm:text-sm">AI: {aiDifficulty}</Badge>
             </div>
 
             {/* Game Board */}
-            <div className="grid grid-cols-3 gap-1 max-w-xs mx-auto">
+            <div className="grid grid-cols-3 gap-1 sm:gap-2 max-w-xs sm:max-w-sm mx-auto">
               {Array(9).fill(null).map((_, index) => renderCell(index))}
             </div>
 
@@ -362,9 +362,6 @@ export function TicTacToe({ piece, onSuccess, onFailure, isSubmitting = false, p
             <div className="bg-gradient-to-r from-blue-500 to-cyan-600 p-4 sm:p-6 rounded-lg text-white">
               <CheckCircle className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3" />
               <h3 className="text-xl sm:text-2xl font-bold mb-2">Thank You!</h3>
-              <p className="text-blue-100 text-sm sm:text-base">
-                Your piece has been added to the puzzle. This tab will close automatically in 5 seconds.
-              </p>
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">

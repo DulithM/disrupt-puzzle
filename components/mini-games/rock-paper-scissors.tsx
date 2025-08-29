@@ -219,14 +219,14 @@ export function RockPaperScissors({ piece, onSuccess, onFailure, isSubmitting = 
         {gameState === "playing" && (
           <div className="space-y-4">
             {/* Game Stats */}
-            <div className="grid grid-cols-4 gap-1 sm:gap-2">
-              <Badge variant="outline" className="flex items-center gap-1 justify-center text-xs">
-                <Timer className="w-3 h-3" />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
+              <Badge variant="outline" className="flex items-center gap-1 justify-center text-xs sm:text-sm">
+                <Timer className="w-3 h-3 sm:w-4 sm:h-4" />
                 {formatTime(timeLeft)}
               </Badge>
-              <Badge variant="secondary" className="justify-center text-xs">Score: {score}</Badge>
-              <Badge variant="outline" className="justify-center text-xs">Round: {currentRound}/{totalRounds}</Badge>
-              <Badge variant="outline" className="justify-center text-xs">Streak: {streak}</Badge>
+              <Badge variant="secondary" className="justify-center text-xs sm:text-sm">Score: {score}</Badge>
+              <Badge variant="outline" className="justify-center text-xs sm:text-sm">Round: {currentRound}/{totalRounds}</Badge>
+              <Badge variant="outline" className="justify-center text-xs sm:text-sm">Streak: {streak}</Badge>
             </div>
 
             {/* Progress Bar */}
@@ -243,20 +243,20 @@ export function RockPaperScissors({ piece, onSuccess, onFailure, isSubmitting = 
 
             {/* Result Display */}
             {showResult && lastResult && (
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 space-y-4 shadow-lg">
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 sm:p-6 space-y-4 shadow-lg">
                 <div className="text-center">
-                  <h3 className={`text-2xl font-bold mb-4 ${lastResult.result === 'win' ? 'text-green-600' : lastResult.result === 'lose' ? 'text-red-600' : 'text-yellow-600'}`}>
+                  <h3 className={`text-xl sm:text-2xl font-bold mb-3 sm:mb-4 ${lastResult.result === 'win' ? 'text-green-600' : lastResult.result === 'lose' ? 'text-red-600' : 'text-yellow-600'}`}>
                     {getResultMessage(lastResult.result)}
                   </h3>
-                  <div className="flex items-center justify-center gap-6">
+                  <div className="flex items-center justify-center gap-3 sm:gap-6">
                     <div className="text-center">
-                      <div className="text-6xl mb-2 animate-bounce">{getChoiceEmoji(lastResult.playerChoice)}</div>
-                      <p className="text-sm font-bold text-green-700">YOU</p>
+                      <div className="text-4xl sm:text-6xl mb-1 sm:mb-2 animate-bounce">{getChoiceEmoji(lastResult.playerChoice)}</div>
+                      <p className="text-xs sm:text-sm font-bold text-green-700">YOU</p>
                     </div>
-                    <div className="text-3xl font-bold text-gray-500">⚔️</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-gray-500">⚔️</div>
                     <div className="text-center">
-                      <div className="text-6xl mb-2 animate-bounce">{getChoiceEmoji(lastResult.aiChoice)}</div>
-                      <p className="text-sm font-bold text-red-700">AI</p>
+                      <div className="text-4xl sm:text-6xl mb-1 sm:mb-2 animate-bounce">{getChoiceEmoji(lastResult.aiChoice)}</div>
+                      <p className="text-xs sm:text-sm font-bold text-red-700">AI</p>
                     </div>
                   </div>
                 </div>
@@ -266,17 +266,17 @@ export function RockPaperScissors({ piece, onSuccess, onFailure, isSubmitting = 
             {/* Choice Buttons */}
             {!showResult && (
               <div className="space-y-4">
-                <h3 className="text-center text-lg font-semibold text-green-700">Choose your weapon:</h3>
-                <div className="grid grid-cols-3 gap-3">
+                <h3 className="text-center text-base sm:text-lg font-semibold text-green-700">Choose your weapon:</h3>
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   {choices.map((choice) => (
                     <Button
                       key={choice}
                       onClick={() => handleChoice(choice)}
-                      className="flex flex-col items-center justify-center p-4 h-24 text-lg font-bold hover:scale-105 transition-all duration-300 bg-gradient-to-br from-white to-gray-50 border-2 border-green-200 hover:border-green-400 hover:shadow-lg"
+                      className="flex flex-col items-center justify-center p-2 sm:p-4 h-20 sm:h-24 text-base sm:text-lg font-bold hover:scale-105 active:scale-95 transition-all duration-300 bg-gradient-to-br from-white to-gray-50 border-2 border-green-200 hover:border-green-400 hover:shadow-lg"
                       variant="outline"
                     >
-                      <div className="text-4xl mb-1 animate-pulse">{getChoiceEmoji(choice)}</div>
-                      <div className="capitalize font-bold text-green-700">{choice}</div>
+                      <div className="text-2xl sm:text-4xl mb-1 animate-pulse">{getChoiceEmoji(choice)}</div>
+                      <div className="capitalize font-bold text-green-700 text-xs sm:text-sm">{choice}</div>
                     </Button>
                   ))}
                 </div>
@@ -351,9 +351,6 @@ export function RockPaperScissors({ piece, onSuccess, onFailure, isSubmitting = 
             <div className="bg-gradient-to-r from-blue-500 to-cyan-600 p-4 sm:p-6 rounded-lg text-white">
               <CheckCircle className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3" />
               <h3 className="text-xl sm:text-2xl font-bold mb-2">Thank You!</h3>
-              <p className="text-blue-100 text-sm sm:text-base">
-                Your piece has been added to the puzzle. This tab will close automatically in 5 seconds.
-              </p>
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">

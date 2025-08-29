@@ -78,7 +78,7 @@ export function GameManager({ piece, onSuccess, onFailure, isSubmitting = false,
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {renderGame()}
     </div>
   )

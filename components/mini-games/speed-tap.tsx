@@ -155,14 +155,14 @@ export function SpeedTap({ piece, onSuccess, onFailure, isSubmitting = false, pi
         {gameState === "playing" && (
           <div className="space-y-4">
             {/* Game Stats */}
-            <div className="grid grid-cols-4 gap-1 sm:gap-2">
-              <Badge variant="outline" className="flex items-center gap-1 justify-center text-xs">
-                <Timer className="w-3 h-3" />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
+              <Badge variant="outline" className="flex items-center gap-1 justify-center text-xs sm:text-sm">
+                <Timer className="w-3 h-3 sm:w-4 sm:h-4" />
                 {formatTime(timeLeft)}
               </Badge>
-              <Badge variant="secondary" className="justify-center text-xs">Taps: {tapCount}</Badge>
-              <Badge variant="outline" className="justify-center text-xs">Target: {targetTaps}</Badge>
-              <Badge variant="outline" className="justify-center text-xs">Rate: {tapRate}/s</Badge>
+              <Badge variant="secondary" className="justify-center text-xs sm:text-sm">Taps: {tapCount}</Badge>
+              <Badge variant="outline" className="justify-center text-xs sm:text-sm">Target: {targetTaps}</Badge>
+              <Badge variant="outline" className="justify-center text-xs sm:text-sm">Rate: {tapRate}/s</Badge>
             </div>
 
             {/* Progress Bar */}
@@ -179,15 +179,15 @@ export function SpeedTap({ piece, onSuccess, onFailure, isSubmitting = false, pi
 
             {/* Tap Area */}
             <div
-              className="relative w-64 h-64 sm:w-80 sm:h-80 mx-auto bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-dashed border-yellow-300 rounded-lg overflow-hidden cursor-pointer select-none"
+              className="relative w-56 h-56 sm:w-64 sm:h-64 md:w-80 md:h-80 mx-auto bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-dashed border-yellow-300 rounded-lg overflow-hidden cursor-pointer select-none"
               onClick={handleTap}
             >
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="text-6xl sm:text-8xl font-bold text-yellow-600 mb-4">
+                  <div className="text-4xl sm:text-6xl md:text-8xl font-bold text-yellow-600 mb-2 sm:mb-4">
                     {tapCount}
                   </div>
-                  <div className="text-lg sm:text-xl font-semibold text-orange-600">
+                  <div className="text-base sm:text-lg md:text-xl font-semibold text-orange-600">
                     TAP HERE!
                   </div>
                 </div>
@@ -274,9 +274,6 @@ export function SpeedTap({ piece, onSuccess, onFailure, isSubmitting = false, pi
             <div className="bg-gradient-to-r from-blue-500 to-cyan-600 p-4 sm:p-6 rounded-lg text-white">
               <CheckCircle className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3" />
               <h3 className="text-xl sm:text-2xl font-bold mb-2">Thank You!</h3>
-              <p className="text-blue-100 text-sm sm:text-base">
-                Your piece has been added to the puzzle. This tab will close automatically in 5 seconds.
-              </p>
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
