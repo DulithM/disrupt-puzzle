@@ -6,6 +6,12 @@ export const puzzleApi = {
     try {
       console.log('🔍 Fetching puzzle with ID:', id)
       
+      // Check if id is valid
+      if (!id) {
+        console.error('❌ Invalid puzzle ID provided:', id)
+        return null
+      }
+      
       // For mock data, return the first puzzle if ID is mock-1 or mock-2
       if (id.startsWith('mock-')) {
         console.log('🎭 Using mock puzzle data for ID:', id)

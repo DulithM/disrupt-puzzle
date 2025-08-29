@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeft, CheckCircle, Target, AlertTriangle } from "lucide-react"
 import { puzzleApi } from "@/lib/puzzle-api"
 import type { PuzzlePiece, Puzzle } from "@/lib/types"
-import { MiniPuzzleGame } from "@/components/mini-puzzle-game"
+import { GameManager } from "@/components/mini-games/game-manager"
 import Image from "next/image"
 
 export default function PiecePage() {
@@ -44,7 +44,7 @@ export default function PiecePage() {
         let activePuzzle: Puzzle | null = null
         for (const puzzleData of puzzles) {
           const puzzleId = puzzleData.id || (puzzleData as any)._id
-          if (puzzleId) {
+          if (puzzleId && typeof puzzleId === 'string') {
             const loadedPuzzle = await puzzleApi.getPuzzle(puzzleId)
             if (loadedPuzzle && !loadedPuzzle.completedAt) {
               activePuzzle = loadedPuzzle
@@ -63,7 +63,7 @@ export default function PiecePage() {
           const pieceData = puzzleData.pieces.find(p => p.id === pieceId)
           if (pieceData) {
             const puzzleId = puzzleData.id || (puzzleData as any)._id
-            if (puzzleId) {
+            if (puzzleId && typeof puzzleId === 'string') {
               const loadedPuzzle = await puzzleApi.getPuzzle(puzzleId)
               if (loadedPuzzle) {
                 foundPuzzle = loadedPuzzle
@@ -101,7 +101,7 @@ export default function PiecePage() {
   useEffect(() => {
     let unsubscribe = () => {}
 
-    if (puzzle) {
+    if (puzzle && puzzle.id) {
       unsubscribe = puzzleApi.subscribe(puzzle.id, (updatedPuzzle) => {
         setPuzzle(updatedPuzzle)
         const updatedPiece = updatedPuzzle.pieces.find((p) => p.id === pieceId)
@@ -285,7 +285,7 @@ export default function PiecePage() {
               </div>
             </CardHeader>
             <CardContent>
-              <MiniPuzzleGame 
+              <GameManager 
                 piece={piece} 
                 onSuccess={handleGameSuccess} 
                 onFailure={() => {}} 

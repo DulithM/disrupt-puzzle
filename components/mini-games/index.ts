@@ -1,0 +1,5 @@
+export { GameManager } from './game-manager'
+export { TicTacToe } from './tic-tac-toe'
+export { RockPaperScissors } from './rock-paper-scissors'
+export { MemoryMatch } from './memory-match'
+export { SpeedTap } from './speed-tap'
