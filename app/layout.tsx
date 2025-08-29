@@ -65,7 +65,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-gradient-to-br from-cyan-100 via-white to-orange-100 min-h-screen`}>
+      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-gradient-to-br from-cyan-300 via-white to-orange-300 min-h-screen`}>
         {children}
         <Toaster />
       </body>
