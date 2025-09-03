@@ -104,7 +104,7 @@ export function QRCodeGrid({ puzzle }: QRCodeGridProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-full">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -116,7 +116,7 @@ export function QRCodeGrid({ puzzle }: QRCodeGridProps) {
 
 
       {/* QR Code Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 3xl:grid-cols-10 gap-3 sm:gap-4 max-w-full">
         {puzzle.pieces.map((piece) => {
           const pieceUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/piece/${piece.id}`
 
@@ -128,94 +128,67 @@ export function QRCodeGrid({ puzzle }: QRCodeGridProps) {
                 piece.isPlaced ? 'border-green-200 bg-green-50/30' : 'border-blue-200 bg-blue-50/30'
               }`}
             >
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm flex items-center gap-2">
                     {getStatusIcon(piece.isPlaced)}
                     <span className="hidden sm:inline">Piece ({piece.row + 1}, {piece.col + 1})</span>
                     <span className="sm:hidden">({piece.row + 1}, {piece.col + 1})</span>
                   </CardTitle>
-                  <Badge 
-                    variant={piece.isPlaced ? "default" : "secondary"} 
-                    className={`text-xs ${getStatusColor(piece.isPlaced)}`}
-                  >
-                    {piece.isPlaced ? "Done" : "Open"}
-                  </Badge>
                 </div>
-                <CardDescription className="text-xs">
-                  {piece.isPlaced ? (
-                    <span className="text-green-700">
-                      ✓ Completed by {piece.placedBy}
-                    </span>
-                  ) : (
-                    <span className="text-blue-700">
-                      🎮 Ready to play - scan to start!
-                    </span>
-                  )}
-                </CardDescription>
               </CardHeader>
 
-              <CardContent className="space-y-3 sm:space-y-4">
+              <CardContent className="space-y-2 sm:space-y-3">
                 {/* QR Code */}
                 <div className="flex justify-center">
-                  <div className={`p-2 rounded-lg ${
+                  <div className={`p-1 rounded-lg ${
                     piece.isPlaced ? 'bg-green-100' : 'bg-blue-100'
                   }`}>
-                    <QRCode value={pieceUrl} size={100} className="border rounded" />
+                    <QRCode value={pieceUrl} size={80} className="border rounded" />
                   </div>
                 </div>
 
                 {/* Status Message */}
                 {piece.isPlaced ? (
-                  <div className="text-center p-2 bg-green-100 rounded-lg">
+                  <div className="text-center p-1.5 bg-green-100 rounded-lg">
                     <p className="text-xs text-green-800 font-medium">
-                      🎉 This piece is complete!
+                      🎉 Complete!
                     </p>
                   </div>
                 ) : (
-                  <div className="text-center p-2 bg-blue-100 rounded-lg">
+                  <div className="text-center p-1.5 bg-blue-100 rounded-lg">
                     <p className="text-xs text-blue-800 font-medium">
-                      📱 Scan with your phone to play
+                      📱 Ready to play
                     </p>
                   </div>
                 )}
 
-                {/* URL - Hidden on mobile to save space */}
-                <div className="hidden sm:block text-xs text-muted-foreground break-all bg-muted p-2 rounded">
+                {/* URL - Hidden on smaller screens to save space */}
+                <div className="hidden lg:block text-xs text-muted-foreground break-all bg-muted p-1.5 rounded">
                   {pieceUrl}
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2">
+                <div className="flex gap-1.5">
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => copyToClipboard(pieceUrl, piece.id)}
-                    className="flex-1 text-xs"
+                    className="flex-1 text-xs h-7 px-2"
                   >
                     {copiedId === piece.id ? (
                       <>
                         <Check className="w-3 h-3 mr-1" />
-                        <span className="hidden sm:inline">Copied</span>
-                        <span className="sm:hidden">✓</span>
+                        <span className="hidden lg:inline">Copied</span>
+                        <span className="lg:hidden">✓</span>
                       </>
                     ) : (
                       <>
                         <Copy className="w-3 h-3 mr-1" />
-                        <span className="hidden sm:inline">Copy Link</span>
-                        <span className="sm:hidden">Copy</span>
+                        <span className="hidden lg:inline">Copy</span>
+                        <span className="lg:hidden">Copy</span>
                       </>
                     )}
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => downloadQRCode(piece.id, piece.row, piece.col)}
-                    className="text-xs"
-                    title="Download QR Code"
-                  >
-                    <Download className="w-3 h-3" />
                   </Button>
                 </div>
 
@@ -226,23 +199,25 @@ export function QRCodeGrid({ puzzle }: QRCodeGridProps) {
                     variant="default"
                     onClick={() => completePiece(piece.id)}
                     disabled={completingPiece === piece.id}
-                    className="w-full text-xs bg-yellow-600 hover:bg-yellow-700 text-white"
+                    className="w-full text-xs bg-yellow-600 hover:bg-yellow-700 text-white h-7"
                   >
                     {completingPiece === piece.id ? (
                       <>
                         <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                        Completing...
+                        <span className="hidden lg:inline">Completing...</span>
+                        <span className="lg:hidden">...</span>
                       </>
                     ) : (
                       <>
                         <Zap className="w-3 h-3 mr-1" />
-                        Complete (Dev)
+                        <span className="hidden lg:inline">Complete (Dev)</span>
+                        <span className="lg:hidden">Complete</span>
                       </>
                     )}
                   </Button>
                 ) : (
-                  <div className="w-full text-xs bg-green-100 text-green-800 p-2 rounded text-center">
-                    ✓ Already Completed
+                  <div className="w-full text-xs bg-green-100 text-green-800 p-1.5 rounded text-center">
+                    ✓ Complete
                   </div>
                 )}
               </CardContent>
@@ -292,6 +267,13 @@ export function QRCodeGrid({ puzzle }: QRCodeGridProps) {
             height: auto !important;
             overflow: visible !important;
             page-break-inside: avoid;
+          }
+        }
+        
+        /* Custom breakpoint for 3xl screens */
+        @media (min-width: 1920px) {
+          .grid {
+            grid-template-columns: repeat(10, minmax(0, 1fr));
           }
         }
       `}</style>
