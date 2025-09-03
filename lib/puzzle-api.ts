@@ -105,7 +105,7 @@ export const puzzleApi = {
     }
   },
 
-  async placePiece(pieceId: string, placedBy: string): Promise<void> {
+  async placePiece(pieceId: string, placedBy: string): Promise<Puzzle | null> {
     try {
       console.log('🔍 Placing piece:', pieceId, 'by:', placedBy)
       
@@ -142,9 +142,42 @@ export const puzzleApi = {
       
       if (isMockData) {
         console.log('🎭 Using mock piece placement for:', pieceId)
-        // For mock data, just simulate success
-        console.log('✅ Mock piece placed successfully!')
-        return
+        
+        // For mock data, use the test-piece endpoint (same as dev buttons)
+        console.log('🔄 Making API call to test-piece endpoint...')
+        const response = await fetch('/api/test-piece', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            pieceId,
+            placedBy
+          }),
+        })
+
+        console.log('📡 Test-piece API Response status:', response.status)
+        
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error('❌ Test-piece API response error:', response.status, errorText)
+          throw new Error(`Failed to place piece: ${response.statusText} - ${errorText}`)
+        }
+
+        const data = await response.json()
+        console.log('✅ Test-piece placement response:', data)
+        
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to place piece')
+        }
+
+        console.log('✅ Mock piece placed successfully via test endpoint!')
+        console.log('✅ Puzzle completed:', data.data.puzzleCompleted)
+        
+        // Return the updated puzzle data
+        const updatedPuzzles = await this.getAllPuzzles()
+        const updatedPuzzle = updatedPuzzles.find(p => (p.id || (p as any)._id) === targetPuzzleId)
+        return updatedPuzzle || null
       }
 
       // Update the piece in the database
@@ -181,6 +214,11 @@ export const puzzleApi = {
       
       // Notify via WebSocket for real-time updates
       this.notifyPiecePlaced(targetPuzzleId, pieceId, placedBy)
+      
+      // Return the updated puzzle data
+      const updatedPuzzles = await this.getAllPuzzles()
+      const updatedPuzzle = updatedPuzzles.find(p => (p.id || (p as any)._id) === targetPuzzleId)
+      return updatedPuzzle || null
     } catch (error) {
       console.error('❌ Error placing piece:', error)
       throw error

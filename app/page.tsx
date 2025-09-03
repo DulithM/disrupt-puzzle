@@ -194,9 +194,29 @@ export default function HomePage() {
       }
     })
 
+    // Listen for custom puzzle piece placed events
+    const handlePuzzlePiecePlaced = async (event: Event) => {
+      const customEvent = event as CustomEvent
+      console.log('🎯 Main Page - Received puzzle piece placed event:', customEvent.detail)
+      const { puzzleId, pieceId } = customEvent.detail
+      
+      // Refresh the puzzle data to reflect the new piece placement
+      if (puzzle && (puzzle.id || (puzzle as any)._id) === puzzleId) {
+        console.log('🔄 Main Page - Refreshing puzzle data after piece placement...')
+        const refreshedPuzzle = await puzzleApi.getPuzzle(puzzleId)
+        if (refreshedPuzzle) {
+          console.log('✅ Main Page - Puzzle data refreshed:', refreshedPuzzle.title)
+          setPuzzle(refreshedPuzzle)
+        }
+      }
+    }
+
+    window.addEventListener('puzzlePiecePlaced', handlePuzzlePiecePlaced)
+
     return () => {
       unsubscribe()
       if (offStorage) offStorage()
+      window.removeEventListener('puzzlePiecePlaced', handlePuzzlePiecePlaced)
     }
   }, [puzzle, currentPuzzleIndex, allPuzzles])
 

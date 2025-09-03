@@ -366,7 +366,7 @@ export function TicTacToe({ piece, onSuccess, onFailure, isSubmitting = false, p
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
               <p className="text-blue-800 font-medium text-sm sm:text-base">
-                You can now return to the main puzzle to see your contribution!
+                You can now check the main puzzle to see your contribution!
               </p>
             </div>
           </div>
