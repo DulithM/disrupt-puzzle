@@ -256,6 +256,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen w-full overflow-hidden">
+      {/* Puzzle Number Display - Bottom Right Corner */}
+      <div className="fixed bottom-2 right-2 text-sm font-bold text-gray-600 z-10">
+        {currentPuzzleIndex + 1}
+      </div>
       <PuzzleBoard puzzle={puzzle} />
     </div>
   )
