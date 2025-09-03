@@ -111,6 +111,28 @@ export function QRCodeGrid({ puzzle }: QRCodeGridProps) {
           <h2 className="text-xl sm:text-2xl font-bold">Puzzle Piece QR Codes</h2>
           <p className="text-sm sm:text-base text-muted-foreground">Scan any code to start playing and unlock pieces</p>
         </div>
+        
+        {/* Bulk Actions */}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="default"
+            onClick={async () => {
+              // Complete all remaining pieces
+              const incompletePieces = puzzle.pieces.filter(p => !p.isPlaced)
+              console.log(`🔄 Completing all ${incompletePieces.length} remaining pieces...`)
+              
+              for (const piece of incompletePieces) {
+                await completePiece(piece.id)
+                // Small delay to prevent overwhelming the API
+                await new Promise(resolve => setTimeout(resolve, 100))
+              }
+            }}
+            className="text-sm bg-green-600 hover:bg-green-700"
+          >
+            <Zap className="w-4 h-4 mr-2" />
+            Complete All Remaining (Dev)
+          </Button>
+        </div>
       </div>
 
 
@@ -226,27 +248,7 @@ export function QRCodeGrid({ puzzle }: QRCodeGridProps) {
         })}
       </div>
 
-      {/* Bulk Actions */}
-      <div className="flex flex-wrap gap-2 justify-center">
-        <Button
-          variant="default"
-          onClick={async () => {
-            // Complete all remaining pieces
-            const incompletePieces = puzzle.pieces.filter(p => !p.isPlaced)
-            console.log(`🔄 Completing all ${incompletePieces.length} remaining pieces...`)
-            
-            for (const piece of incompletePieces) {
-              await completePiece(piece.id)
-              // Small delay to prevent overwhelming the API
-              await new Promise(resolve => setTimeout(resolve, 100))
-            }
-          }}
-          className="text-sm bg-green-600 hover:bg-green-700"
-        >
-          <Zap className="w-4 h-4 mr-2" />
-          Complete All Remaining (Dev)
-        </Button>
-      </div>
+
 
       {/* Print Styles */}
       <style jsx global>{`
