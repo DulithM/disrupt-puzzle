@@ -2,6 +2,33 @@ import type { Puzzle, PuzzlePiece } from "./types"
 
 // API functions that make actual HTTP requests to the database
 export const puzzleApi = {
+  async getActiveAndNext(): Promise<{ active: Puzzle | null; next: Puzzle | null }> {
+    try {
+      const response = await fetch('/api/active-puzzle');
+      if (!response.ok) throw new Error('Failed to fetch active puzzle');
+      const data = await response.json();
+      return data.success ? data.data : { active: null, next: null };
+    } catch (e) {
+      console.error('Error fetching active+next:', e);
+      return { active: null, next: null };
+    }
+  },
+
+  async advanceActive(forceCompleteId?: string): Promise<{ active: Puzzle | null; next: Puzzle | null }> {
+    try {
+      const response = await fetch('/api/active-puzzle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ forceCompleteId }),
+      });
+      if (!response.ok) throw new Error('Failed to advance active puzzle');
+      const data = await response.json();
+      return data.success ? data.data : { active: null, next: null };
+    } catch (e) {
+      console.error('Error advancing active puzzle:', e);
+      return { active: null, next: null };
+    }
+  },
   async getPuzzle(id: string): Promise<Puzzle | null> {
     try {
       console.log('🔍 Fetching puzzle with ID:', id)

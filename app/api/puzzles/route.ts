@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     // Execute query with pagination
     const [puzzles, total] = await Promise.all([
       Puzzle.find(query)
-        .sort({ createdAt: -1 })
+        .sort({ createdAt: 1 })
         .skip(skip)
         .limit(limit)
         .lean(),
@@ -56,22 +56,22 @@ export async function GET(request: NextRequest) {
       }
     });
     
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching puzzles:', error);
     console.error('Error details:', {
-      name: (error as any).name,
-      message: (error as any).message,
-      code: (error as any).code,
-      stack: (error as any).stack
+      name: (error instanceof Error) ? error.name : 'Unknown',
+      message: (error instanceof Error) ? error.message : String(error),
+      code: (error as any)?.code,
+      stack: (error instanceof Error) ? error.stack : undefined
     });
     
     // Return more specific error information
-    const errorMessage = (error as any).message || 'Failed to fetch puzzles';
+    const errorMessage = (error instanceof Error) ? error.message : 'Failed to fetch puzzles';
     return NextResponse.json(
       { 
         success: false, 
         error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? (error as any).stack : undefined
+        details: process.env.NODE_ENV === 'development' && (error instanceof Error) ? error.stack : undefined
       },
       { status: 500 }
     );
@@ -108,10 +108,10 @@ export async function POST(request: NextRequest) {
       message: 'Puzzle created successfully'
     }, { status: 201 });
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating puzzle:', error);
     
-    if (error.code === 11000) {
+    if (error?.code === 11000) {
       return NextResponse.json(
         { success: false, error: 'Puzzle with this title already exists' },
         { status: 409 }

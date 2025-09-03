@@ -6,6 +6,7 @@ const DB_NAME = 'puzzle_db';
 
 // Simple schema without strict validation
 const PuzzleSchema = new mongoose.Schema({
+  id: String,
   title: String,
   imageUrl: String,
   rows: Number,
@@ -23,11 +24,12 @@ const PuzzleSchema = new mongoose.Schema({
       col: Number
     }
   }],
-  isActive: Boolean,
+  // isActive: Boolean, // removed - using currentlyInUse instead
   unlockCode: String,
   isUnlocked: Boolean,
   unlockedAt: Date,
-  completedAt: Date
+  completedAt: Date,
+  currentlyInUse: { type: Boolean, default: false } // NEW
 }, { 
   timestamps: true,
   strict: false // Allow any fields
@@ -38,39 +40,43 @@ const Puzzle = mongoose.models.Puzzle || mongoose.model('Puzzle', PuzzleSchema);
 // Puzzle data in the desired order
 const puzzleDataArray = [
   {
-    title: 'Image 4',
+    id: '1',
+    title: 'Image 1',
     imageUrl: '/puzzles/DA-2016.jpg',
     rows: 10,
     cols: 10,
-    isActive: true,
-    unlockCode: 'image_4',
+    // isActive removed - using currentlyInUse instead
+    unlockCode: 'image_1',
     isUnlocked: false
   },
   {
-    title: 'Image 3',
+    id: '2',
+    title: 'Image 2',
     imageUrl: '/puzzles/DA-2017.jpg',
     rows: 10,
     cols: 10,
-    isActive: true,
-    unlockCode: 'image_3',
-    isUnlocked: false
-  },
-  {
-    title: 'Image 2',
-    imageUrl: '/puzzles/DA-2018.jpg',
-    rows: 10,
-    cols: 10,
-    isActive: true,
+    // isActive removed - using currentlyInUse instead
     unlockCode: 'image_2',
     isUnlocked: false
   },
   {
-    title: 'Image 1',
+    id: '3',
+    title: 'Image 3',
+    imageUrl: '/puzzles/DA-2018.jpg',
+    rows: 10,
+    cols: 10,
+    // isActive removed - using currentlyInUse instead
+    unlockCode: 'image_3',
+    isUnlocked: false
+  },
+  {
+    id: '4',
+    title: 'Image 4',
     imageUrl: '/puzzles/DA-2019.jpg',
     rows: 10,
     cols: 10,
-    isActive: true,
-    unlockCode: 'image_1',
+    // isActive removed - using currentlyInUse instead
+    unlockCode: 'image_4',
     isUnlocked: false
   }
 ];
@@ -91,7 +97,8 @@ async function seedDatabase() {
     const createdPuzzles = [];
     let globalPieceCounter = 0;
     
-    for (const puzzleData of puzzleDataArray) {
+    for (let index = 0; index < puzzleDataArray.length; index++) {
+      const puzzleData = puzzleDataArray[index];
       // Generate pieces for this puzzle
       const pieces = [];
       for (let row = 0; row < puzzleData.rows; row++) {
@@ -113,7 +120,8 @@ async function seedDatabase() {
       // Create and save the puzzle
       const puzzle = new Puzzle({
         ...puzzleData,
-        pieces
+        pieces,
+        currentlyInUse: index === 0 // Image 1 starts first, then 2, 3, 4, back to 1...
       });
       
       await puzzle.save();
@@ -123,7 +131,7 @@ async function seedDatabase() {
     
     console.log('\n📋 Final Puzzle Sequence:');
     createdPuzzles.forEach((puzzle, index) => {
-      console.log(`  ${index + 1}. ${puzzle.title} (${puzzle.unlockCode})`);
+      console.log(`  ${index + 1}. ${puzzle.title} (${puzzle.unlockCode}) - inUse=${puzzle.currentlyInUse}`);
     });
     
     console.log('\n✅ Database seeding completed successfully!');

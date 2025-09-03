@@ -13,41 +13,68 @@ export async function POST(
     
     const { id } = await params;
     
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid puzzle ID' },
-        { status: 400 }
+    let updateResult = null;
+    
+    // Try to reset by MongoDB ObjectId first
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      updateResult = await Puzzle.updateOne(
+        { _id: id },
+        {
+          $set: {
+            'pieces.$[].isPlaced': false,
+            'pieces.$[].placedBy': undefined,
+            'pieces.$[].placedAt': undefined,
+            completedAt: undefined,
+            isUnlocked: false,
+            unlockedAt: undefined,
+          }
+        },
+        { runValidators: false }
       );
     }
     
-    const puzzle = await Puzzle.findById(id);
-    
-    if (!puzzle) {
+    // If not found by ObjectId, try to reset by the 'id' field (string ID)
+    if (!updateResult || updateResult.matchedCount === 0) {
+      updateResult = await Puzzle.updateOne(
+        { id: id },
+        {
+          $set: {
+            'pieces.$[].isPlaced': false,
+            'pieces.$[].placedBy': undefined,
+            'pieces.$[].placedAt': undefined,
+            completedAt: undefined,
+            isUnlocked: false,
+            unlockedAt: undefined,
+          }
+        },
+        { runValidators: false }
+      );
+    }
+
+    if (updateResult.matchedCount === 0) {
       return NextResponse.json(
         { success: false, error: 'Puzzle not found' },
         { status: 404 }
       );
     }
+
+    let refreshed = null;
     
-    // Reset all pieces to unplaced status
-    puzzle.pieces.forEach(piece => {
-      piece.isPlaced = false;
-      piece.placedBy = undefined;
-      piece.placedAt = undefined;
-    });
+    // Try to find by MongoDB ObjectId first
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      refreshed = await Puzzle.findById(id).lean();
+    }
     
-    // Clear completion status
-    puzzle.completedAt = undefined;
-    puzzle.isUnlocked = false;
-    puzzle.unlockedAt = undefined;
+    // If not found by ObjectId, try to find by the 'id' field (string ID)
+    if (!refreshed) {
+      refreshed = await Puzzle.findOne({ id: id }).lean();
+    }
     
-    await puzzle.save();
-    
-    console.log(`🔄 Puzzle "${puzzle.title}" reset successfully`);
+    console.log(`🔄 Puzzle "${refreshed?.title || id}" reset successfully`);
     
     return NextResponse.json({
       success: true,
-      data: puzzle,
+      data: refreshed,
       message: 'Puzzle reset successfully'
     });
     

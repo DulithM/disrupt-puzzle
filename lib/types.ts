@@ -1,24 +1,31 @@
 export interface PuzzlePiece {
   id: string
-  puzzleId: string
   row: number
   col: number
   imageUrl: string
   isPlaced: boolean
-  placedBy?: string
-  placedAt?: Date
+  unlockCode: string
+  unlockedAt?: Date
+  originalPosition: {
+    row: number
+    col: number
+  }
 }
 
 export interface Puzzle {
   id: string
   title: string
-  description: string
   imageUrl: string
   rows: number
   cols: number
   pieces: PuzzlePiece[]
-  createdAt: Date
+  unlockCode: string
+  isUnlocked: boolean
+  unlockedAt?: Date
   completedAt?: Date
+  currentlyInUse?: boolean
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface PuzzleState {

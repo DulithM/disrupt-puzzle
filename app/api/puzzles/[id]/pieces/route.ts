@@ -13,14 +13,17 @@ export async function GET(
     
     const { id } = await params;
     
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid puzzle ID' },
-        { status: 400 }
-      );
+    let puzzle = null;
+    
+    // Try to find by MongoDB ObjectId first
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      puzzle = await Puzzle.findById(id).select('pieces').lean();
     }
     
-    const puzzle = await Puzzle.findById(id).select('pieces').lean();
+    // If not found by ObjectId, try to find by the 'id' field (string ID)
+    if (!puzzle) {
+      puzzle = await Puzzle.findOne({ id: id }).select('pieces').lean();
+    }
     
     if (!puzzle) {
       return NextResponse.json(
@@ -54,13 +57,6 @@ export async function POST(
     const { id } = await params;
     const body = await request.json();
     
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid puzzle ID' },
-        { status: 400 }
-      );
-    }
-    
     const { pieceId, placedBy, row, col } = body;
     
     if (!pieceId || !placedBy) {
@@ -70,46 +66,107 @@ export async function POST(
       );
     }
     
-    const puzzle = await Puzzle.findById(id);
+    // Targeted update to single piece to avoid full-document validation
+    const placedAt = new Date();
     
-    if (!puzzle) {
-      return NextResponse.json(
-        { success: false, error: 'Puzzle not found' },
-        { status: 404 }
+    let updateResult = null;
+    
+    // Try to update by MongoDB ObjectId first
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      const updateQuery: any = { _id: id, 'pieces.id': pieceId };
+      const updateSet: any = {
+        'pieces.$.isPlaced': true,
+        'pieces.$.placedBy': placedBy,
+        'pieces.$.placedAt': placedAt,
+      };
+      if (row !== undefined) updateSet['pieces.$.row'] = row;
+      if (col !== undefined) updateSet['pieces.$.col'] = col;
+
+      updateResult = await Puzzle.updateOne(
+        updateQuery,
+        { $set: updateSet },
+        { runValidators: false }
       );
     }
     
-    // Find the piece to update
-    const pieceIndex = puzzle.pieces.findIndex(p => p.id === pieceId);
-    
-    if (pieceIndex === -1) {
+    // If not found by ObjectId, try to update by the 'id' field (string ID)
+    if (!updateResult || updateResult.matchedCount === 0) {
+      const updateQuery: any = { id: id, 'pieces.id': pieceId };
+      const updateSet: any = {
+        'pieces.$.isPlaced': true,
+        'pieces.$.placedBy': placedBy,
+        'pieces.$.placedAt': placedAt,
+      };
+      if (row !== undefined) updateSet['pieces.$.row'] = row;
+      if (col !== undefined) updateSet['pieces.$.col'] = col;
+
+      updateResult = await Puzzle.updateOne(
+        updateQuery,
+        { $set: updateSet },
+        { runValidators: false }
+      );
+    }
+
+    if (updateResult.matchedCount === 0) {
       return NextResponse.json(
-        { success: false, error: 'Piece not found' },
+        { success: false, error: 'Puzzle or piece not found' },
         { status: 404 }
       );
     }
+
+    // Re-fetch puzzle to compute completion state
+    let refreshed = null;
     
-    // Update the piece
-    puzzle.pieces[pieceIndex].isPlaced = true;
-    puzzle.pieces[pieceIndex].placedBy = placedBy;
-    puzzle.pieces[pieceIndex].placedAt = new Date();
-    
-    if (row !== undefined && col !== undefined) {
-      puzzle.pieces[pieceIndex].row = row;
-      puzzle.pieces[pieceIndex].col = col;
+    // Try to find by MongoDB ObjectId first
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      refreshed = await Puzzle.findById(id).lean();
     }
     
-    // Check if puzzle is completed
-    const allPiecesPlaced = puzzle.pieces.every(p => p.isPlaced);
-    if (allPiecesPlaced && !puzzle.completedAt) {
-      puzzle.completedAt = new Date();
+    // If not found by ObjectId, try to find by the 'id' field (string ID)
+    if (!refreshed) {
+      refreshed = await Puzzle.findOne({ id: id }).lean();
     }
     
-    await puzzle.save();
+    if (!refreshed) {
+      return NextResponse.json(
+        { success: false, error: 'Puzzle not found after update' },
+        { status: 400 }
+      );
+    }
+
+    const completedPieces = (refreshed.pieces || []).filter((p: any) => p.isPlaced).length;
+    const totalPieces = (refreshed.pieces || []).length;
+    const allPiecesPlaced = totalPieces > 0 && completedPieces === totalPieces;
+
+    // If completed and no completedAt, set it in a separate update without validation
+    if (allPiecesPlaced && !refreshed.completedAt) {
+      let completionUpdateResult = null;
+      
+      // Try to update by MongoDB ObjectId first
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        completionUpdateResult = await Puzzle.updateOne(
+          { _id: id },
+          { $set: { completedAt: new Date() } },
+          { runValidators: false }
+        );
+      }
+      
+      // If not found by ObjectId, try to update by the 'id' field (string ID)
+      if (!completionUpdateResult || completionUpdateResult.matchedCount === 0) {
+        await Puzzle.updateOne(
+          { id: id },
+          { $set: { completedAt: new Date() } },
+          { runValidators: false }
+        );
+      }
+    }
+
+    // Return the updated piece data from refreshed doc
+    const updatedPiece = (refreshed.pieces as any[]).find(p => p.id === pieceId) || null;
     
     return NextResponse.json({
       success: true,
-      data: puzzle.pieces[pieceIndex],
+      data: updatedPiece,
       message: 'Piece placed successfully',
       puzzleCompleted: allPiecesPlaced
     });
@@ -134,14 +191,17 @@ export async function PUT(
     const { id, pieceId } = await params;
     const body = await request.json();
     
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid puzzle ID' },
-        { status: 400 }
-      );
+    let puzzle = null;
+    
+    // Try to find by MongoDB ObjectId first
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      puzzle = await Puzzle.findById(id);
     }
     
-    const puzzle = await Puzzle.findById(id);
+    // If not found by ObjectId, try to find by the 'id' field (string ID)
+    if (!puzzle) {
+      puzzle = await Puzzle.findOne({ id: id });
+    }
     
     if (!puzzle) {
       return NextResponse.json(

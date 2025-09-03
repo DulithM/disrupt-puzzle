@@ -2,13 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { QrCode, Users } from "lucide-react"
 import { puzzleApi } from "@/lib/puzzle-api"
 import type { Puzzle } from "@/lib/types"
 import { PuzzleBoard } from "@/components/puzzle-board"
-import { PuzzleCompletion } from "@/components/puzzle-completion"
-import { PuzzleProgress } from "@/components/puzzle-progress"
-import { findCurrentActivePuzzle } from "@/lib/puzzle-utils"
 import { getActivePuzzleIdLocal, getActivePuzzleIndexLocal, onActivePuzzleChangeLocal, setActivePuzzleLocal } from "@/lib/puzzle-sync"
 
 export default function HomePage() {
@@ -18,7 +14,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Load all puzzles and set up the first one
+  // Load all puzzles and find the current active one
   useEffect(() => {
     const loadPuzzles = async () => {
       try {
@@ -27,43 +23,39 @@ export default function HomePage() {
         
         // Get all available puzzles
         const puzzles = await puzzleApi.getAllPuzzles()
-        console.log('🔍 Puzzles received:', puzzles)
+        console.log('🔍 Main Page - Puzzles received:', puzzles)
         
         if (puzzles.length > 0) {
           setAllPuzzles(puzzles)
           
           // Log the puzzle sequence
-          console.log('📋 Puzzle Sequence:')
+          console.log('📋 Main Page - Puzzle Sequence:')
           puzzles.forEach((puzzle, index) => {
             console.log(`  ${index + 1}. ${puzzle.title} (${puzzle.rows}x${puzzle.cols})`)
           })
           
-          // If a stored active index exists, prefer it for immediate cross-page sync
-          const storedIndex = getActivePuzzleIndexLocal()
-          if (storedIndex != null && storedIndex >= 0 && storedIndex < puzzles.length) {
-            console.log('🧩 Main Page - Using stored active index:', storedIndex)
-            setCurrentPuzzleIndex(storedIndex)
-            const preset = await loadPuzzleByIndex(storedIndex)
-            if (preset) {
-              setPuzzle(preset)
-              return
+          // Get active and next puzzle from server
+          const activeNext = await puzzleApi.getActiveAndNext()
+          console.log('🎯 Main Page - Server returned active puzzle:', activeNext.active?.title)
+          
+          if (activeNext.active) {
+            setPuzzle(activeNext.active)
+            
+            // Find the index of the active puzzle in our local array
+            const activeIndex = puzzles.findIndex(p => 
+              (p.id || (p as any)._id) === (activeNext.active?.id || (activeNext.active as any)?._id)
+            )
+            
+            if (activeIndex !== -1) {
+              setCurrentPuzzleIndex(activeIndex)
+              console.log(`✅ Main Page - Active puzzle index: ${activeIndex + 1}/${puzzles.length}`)
+              
+              // Persist active selection for other pages
+              const activeId = activeNext.active.id || (activeNext.active as any)._id
+              if (activeId) setActivePuzzleLocal(activeId, activeIndex)
             }
-          }
-
-          // Otherwise find the current active puzzle using shared utility
-          const { activeIndex, activePuzzle } = await findCurrentActivePuzzle(puzzles)
-          
-          setCurrentPuzzleIndex(activeIndex)
-          console.log(`🎯 Main Page - Active puzzle index: ${activeIndex + 1}/${puzzles.length}`)
-          
-          if (activePuzzle) {
-            console.log('✅ Main Page - Active puzzle loaded successfully:', activePuzzle.title)
-            setPuzzle(activePuzzle)
-            // Persist active selection for other pages
-            const activeId = (activePuzzle as any).id || (activePuzzle as any)._id
-            if (activeId) setActivePuzzleLocal(activeId, activeIndex)
           } else {
-            setError("Failed to load active puzzle data")
+            setError("No active puzzle found. Please check the database.")
           }
         } else {
           setError("No puzzles found. Please seed the database first.")
@@ -90,7 +82,7 @@ export default function HomePage() {
       if (puzzleId) {
         const loadedPuzzle = await puzzleApi.getPuzzle(puzzleId)
         if (loadedPuzzle) {
-          console.log(`✅ Puzzle ${index + 1}/${allPuzzles.length} loaded:`, loadedPuzzle.title)
+          console.log(`✅ Main Page - Puzzle ${index + 1}/${allPuzzles.length} loaded:`, loadedPuzzle.title)
           // Persist active selection for other pages
           setActivePuzzleLocal(puzzleId, index)
           return loadedPuzzle
@@ -102,90 +94,58 @@ export default function HomePage() {
     return null
   }
 
-  // Move to next puzzle
-  const moveToNextPuzzle = async () => {
-    const nextIndex = currentPuzzleIndex + 1
+  // Simple completion handling - reset and go to next
+  const handlePuzzleCompletion = async () => {
+    console.log(`🎉 Main Page - Puzzle ${currentPuzzleIndex + 1}/${allPuzzles.length} completed!`)
     
-    if (nextIndex >= allPuzzles.length) {
-      // All puzzles completed, reset to beginning
-      console.log('🎉 All puzzles completed! Resetting to first puzzle...')
-      console.log('🔄 Cycle complete - starting over from the beginning')
-      await resetAllPuzzles()
-      setCurrentPuzzleIndex(0)
-      const firstPuzzle = await loadPuzzleByIndex(0)
-      if (firstPuzzle) {
-        setPuzzle(firstPuzzle)
-        console.log(`🔄 Restarted with: ${firstPuzzle.title}`)
-      }
-    } else {
-      // Move to next puzzle
-      const currentPuzzle = allPuzzles[currentPuzzleIndex]
-      const nextPuzzleData = allPuzzles[nextIndex]
-      console.log(`🔄 Moving from "${currentPuzzle.title}" to "${nextPuzzleData.title}" (${nextIndex + 1}/${allPuzzles.length})`)
-      setCurrentPuzzleIndex(nextIndex)
-      const nextPuzzle = await loadPuzzleByIndex(nextIndex)
-      if (nextPuzzle) {
-        setPuzzle(nextPuzzle)
-      }
-    }
-  }
-
-  // Reset all puzzles (clear completion status)
-  const resetAllPuzzles = async () => {
-    console.log('🔄 Resetting all puzzles...')
     try {
-      // Reset each puzzle by clearing completion status
-      for (const puzzleData of allPuzzles) {
-        const puzzleId = puzzleData.id || (puzzleData as any)._id
-        if (puzzleId) {
-          const success = await puzzleApi.resetPuzzle(puzzleId)
-          if (success) {
-            console.log(`🔄 Reset puzzle: ${puzzleData.title}`)
-          } else {
-            console.error(`❌ Failed to reset puzzle: ${puzzleData.title}`)
-          }
+      const currentPuzzleId = puzzle?.id || (puzzle as any)?._id
+      
+      // 1. Reset the completed puzzle
+      console.log('🔄 Main Page - Resetting completed puzzle...')
+      await puzzleApi.resetPuzzle(currentPuzzleId)
+      
+      // 2. Go to next puzzle
+      const nextIndex = (currentPuzzleIndex + 1) % allPuzzles.length
+      console.log(`🔄 Main Page - Moving to puzzle ${nextIndex + 1}/${allPuzzles.length}`)
+      
+      const nextPuzzleData = allPuzzles[nextIndex]
+      const nextPuzzleId = nextPuzzleData.id || (nextPuzzleData as any)._id
+      
+      if (nextPuzzleId) {
+        const nextPuzzle = await puzzleApi.getPuzzle(nextPuzzleId)
+        if (nextPuzzle) {
+          setPuzzle(nextPuzzle)
+          setCurrentPuzzleIndex(nextIndex)
+          
+          // Notify other pages about the change
+          setActivePuzzleLocal(nextPuzzleId, nextIndex)
+          
+          console.log(`✅ Main Page - Now viewing: ${nextPuzzle.title}`)
         }
       }
     } catch (error) {
-      console.error('Failed to reset puzzles:', error)
+      console.error('❌ Main Page - Error handling completion:', error)
     }
   }
 
-  // Handle puzzle completion
-  const handlePuzzleCompletion = async () => {
-    console.log(`🎉 Puzzle ${currentPuzzleIndex + 1}/${allPuzzles.length} completed!`)
-    
-    // Immediately reset the current puzzle
-    const currentPuzzleData = allPuzzles[currentPuzzleIndex]
-    const currentPuzzleId = currentPuzzleData.id || (currentPuzzleData as any)._id
-    if (currentPuzzleId) {
-      console.log(`🔄 Resetting completed puzzle: ${currentPuzzleData.title}`)
-      const resetSuccess = await puzzleApi.resetPuzzle(currentPuzzleId)
-      if (resetSuccess) {
-        console.log(`✅ Successfully reset: ${currentPuzzleData.title}`)
-      } else {
-        console.error(`❌ Failed to reset: ${currentPuzzleData.title}`)
+  // Go to a specific puzzle by index (for revisiting)
+  const goToPuzzle = async (index: number) => {
+    if (index >= 0 && index < allPuzzles.length) {
+      console.log(`🔄 Main Page - Manually going to puzzle ${index + 1}/${allPuzzles.length}`)
+      setCurrentPuzzleIndex(index)
+      const targetPuzzle = await loadPuzzleByIndex(index)
+      if (targetPuzzle) {
+        setPuzzle(targetPuzzle)
+        console.log(`✅ Main Page - Now viewing: ${targetPuzzle.title}`)
       }
     }
-    
-    // Then move to next puzzle
-    await moveToNextPuzzle()
   }
 
-  // Force refresh current puzzle data
-  const refreshCurrentPuzzle = async () => {
-    if (allPuzzles.length > 0 && currentPuzzleIndex < allPuzzles.length) {
-      const puzzleData = allPuzzles[currentPuzzleIndex]
-      const puzzleId = puzzleData.id || (puzzleData as any)._id
-      
-      if (puzzleId) {
-        const refreshedPuzzle = await puzzleApi.getPuzzle(puzzleId)
-        if (refreshedPuzzle) {
-          console.log('🔄 Refreshed puzzle data:', refreshedPuzzle.title)
-          setPuzzle(refreshedPuzzle)
-        }
-      }
-    }
+  // Test function to manually advance to next puzzle (for debugging)
+  const testAdvancePuzzle = async () => {
+    console.log('🧪 Main Page - Testing manual puzzle advance...')
+    handlePuzzleCompletion()
   }
 
   useEffect(() => {
@@ -195,32 +155,30 @@ export default function HomePage() {
     if (puzzle) {
       // Get the correct puzzle ID for subscription
       const puzzleId = puzzle.id || (puzzle as any)._id
-      console.log('🔍 Setting up subscription for puzzle:', puzzleId)
+      console.log('🔍 Main Page - Setting up subscription for puzzle:', puzzleId)
       
       if (puzzleId) {
         unsubscribe = puzzleApi.subscribe(puzzleId, (updatedPuzzle) => {
-          console.log('🔄 Puzzle updated via subscription:', updatedPuzzle.title)
-          console.log('🔄 New completed pieces:', updatedPuzzle.pieces.filter(p => p.isPlaced).length)
-          console.log('🔄 Total pieces:', updatedPuzzle.pieces.length)
-          console.log('🔄 Puzzle completed:', !!updatedPuzzle.completedAt)
+          console.log('🔄 Main Page - Puzzle updated via subscription:', updatedPuzzle.title)
+          console.log('🔄 Main Page - New completed pieces:', updatedPuzzle.pieces.filter(p => p.isPlaced).length)
+          console.log('🔄 Main Page - Total pieces:', updatedPuzzle.pieces.length)
           
           setPuzzle(updatedPuzzle)
           
-          // Check if puzzle is completed (either completedAt set or all pieces placed) and move to next
+          // Simple completion detection
           const completedCount = updatedPuzzle.pieces.filter(p => p.isPlaced).length
-          const isCompleteNow = !!updatedPuzzle.completedAt || (completedCount > 0 && completedCount === updatedPuzzle.pieces.length)
-          const wasCompleteBefore = !!puzzle.completedAt || (puzzle.pieces.filter(p => p.isPlaced).length === puzzle.pieces.length && puzzle.pieces.length > 0)
-
-          if (isCompleteNow && !wasCompleteBefore) {
-            console.log('🎉 Puzzle completed! Moving to next puzzle...')
-            // Small delay to ensure the completion modal shows first
-            setTimeout(() => {
-              handlePuzzleCompletion()
-            }, 1000)
+          const totalPieces = updatedPuzzle.pieces.length
+          const isComplete = totalPieces > 0 && completedCount === totalPieces
+          
+          console.log(`🔍 Main Page - Puzzle "${updatedPuzzle.title}": ${completedCount}/${totalPieces} pieces placed`)
+          
+          if (isComplete) {
+            console.log('🎉 Main Page - Puzzle completed! Moving to next puzzle automatically...')
+            handlePuzzleCompletion()
           }
         })
       } else {
-        console.warn('⚠️ Cannot subscribe: puzzle ID is undefined')
+        console.warn('⚠️ Main Page - Cannot subscribe: puzzle ID is undefined')
       }
     }
 
@@ -278,14 +236,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen w-full overflow-hidden">
-
       <PuzzleBoard puzzle={puzzle} />
-      
-      {/* Puzzle completion modal */}
-      <PuzzleCompletion 
-        puzzle={puzzle} 
-        isLastPuzzle={currentPuzzleIndex === allPuzzles.length - 1}
-      />
     </div>
   )
 }

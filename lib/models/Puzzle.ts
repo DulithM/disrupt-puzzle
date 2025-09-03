@@ -1,26 +1,19 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IPuzzle extends Document {
+  id: string;
   title: string;
-  description: string;
   imageUrl: string;
   rows: number;
   cols: number;
   pieces: IPuzzlePiece[];
-  createdAt: Date;
-  updatedAt: Date;
-  completedAt?: Date;
-  isActive: boolean;
-  difficulty: 'easy' | 'medium' | 'hard';
-  category: string;
-  tags: string[];
-  maxPlayers: number;
-  currentPlayers: number;
-  // Exhibition-specific fields
-  exhibitionId: string;
   unlockCode: string; // QR code identifier
   isUnlocked: boolean;
   unlockedAt?: Date;
+  completedAt?: Date;
+  currentlyInUse?: boolean; // Server-controlled active rotation flag
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface IPuzzlePiece {
@@ -52,16 +45,16 @@ const PuzzlePieceSchema = new Schema<IPuzzlePiece>({
 }, { _id: false });
 
 const PuzzleSchema = new Schema<IPuzzle>({
+  id: { 
+    type: String, 
+    required: true,
+    unique: true
+  },
   title: { 
     type: String, 
     required: true,
     trim: true,
     maxlength: 100
-  },
-  description: { 
-    type: String, 
-    required: true,
-    maxlength: 500
   },
   imageUrl: { 
     type: String, 
@@ -80,39 +73,6 @@ const PuzzleSchema = new Schema<IPuzzle>({
     max: 20
   },
   pieces: [PuzzlePieceSchema],
-  isActive: { 
-    type: Boolean, 
-    default: true 
-  },
-  difficulty: { 
-    type: String, 
-    enum: ['easy', 'medium', 'hard'], 
-    default: 'medium' 
-  },
-  category: { 
-    type: String, 
-    default: 'exhibition' 
-  },
-  tags: [{ 
-    type: String,
-    trim: true 
-  }],
-  maxPlayers: { 
-    type: Number, 
-    default: 50,
-    min: 1,
-    max: 100
-  },
-  currentPlayers: { 
-    type: Number, 
-    default: 0,
-    min: 0
-  },
-  exhibitionId: {
-    type: String,
-    required: true,
-    default: 'main-exhibition'
-  },
   unlockCode: {
     type: String,
     required: true,
@@ -122,19 +82,20 @@ const PuzzleSchema = new Schema<IPuzzle>({
     type: Boolean,
     default: false
   },
-  unlockedAt: { type: Date }
+  unlockedAt: { type: Date },
+  completedAt: { type: Date },
+  currentlyInUse: { type: Boolean, default: false }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
 
-// Indexes for better query performance (removed duplicates)
-PuzzleSchema.index({ title: 'text', description: 'text', tags: 'text' });
-PuzzleSchema.index({ isActive: 1, difficulty: 1, category: 1 });
+// Indexes for better query performance
+PuzzleSchema.index({ title: 'text' });
 PuzzleSchema.index({ createdAt: -1 });
-PuzzleSchema.index({ currentPlayers: -1 });
-PuzzleSchema.index({ exhibitionId: 1 });
+PuzzleSchema.index({ currentlyInUse: 1 });
+PuzzleSchema.index({ unlockCode: 1 });
 
 // Virtual for total pieces
 PuzzleSchema.virtual('totalPieces').get(function() {
@@ -148,32 +109,6 @@ PuzzleSchema.virtual('completionPercentage').get(function() {
   return Math.round((placedPieces / this.pieces.length) * 100);
 });
 
-// Virtual for unlocked pieces count
-PuzzleSchema.virtual('unlockedPiecesCount').get(function() {
-  if (!this.pieces || this.pieces.length === 0) return 0;
-  return this.pieces.filter(piece => piece.unlockCode).length;
-});
-
-// Pre-save middleware to ensure pieces array is properly structured
-PuzzleSchema.pre('save', function(next) {
-  if (this.isModified('rows') || this.isModified('cols')) {
-    // Regenerate pieces array if dimensions change
-    this.pieces = [];
-    for (let row = 0; row < this.rows; row++) {
-      for (let col = 0; col < this.cols; col++) {
-        this.pieces.push({
-          id: `${row}-${col}`,
-          row,
-          col,
-          imageUrl: this.imageUrl,
-          isPlaced: false,
-          unlockCode: `${this.unlockCode}_piece_${row}_${col}`,
-          originalPosition: { row, col }
-        });
-      }
-    }
-  }
-  next();
-});
+// Pre-save middleware removed - pieces are created by the seeder
 
 export const Puzzle = mongoose.models.Puzzle || mongoose.model<IPuzzle>('Puzzle', PuzzleSchema);
