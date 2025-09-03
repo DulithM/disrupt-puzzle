@@ -16,7 +16,7 @@ const mockPuzzles = [
     exhibitionId: 'main-exhibition',
     unlockCode: 'disrupt_asia_2017',
     isUnlocked: false,
-    isActive: true,
+    isActive: true, // Only the first puzzle should be active
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     pieces: []
@@ -36,7 +36,7 @@ const mockPuzzles = [
     exhibitionId: 'main-exhibition',
     unlockCode: 'disrupt_asia_2016',
     isUnlocked: false,
-    isActive: true,
+    isActive: false, // Second puzzle should not be active
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     pieces: []

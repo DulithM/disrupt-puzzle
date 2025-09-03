@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import Image from "next/image"
 import {
   Puzzle,
   Target,
@@ -91,12 +92,25 @@ export function GameSelector({ piece, onGameSelect }: GameSelectorProps) {
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader className="text-center">
-        <CardTitle className="flex items-center justify-center gap-2 text-xl sm:text-2xl">
-          <Gamepad2 className="w-6 h-6 text-purple-600" />
-          Choose Your Challenge
-        </CardTitle>
-        <CardDescription className="text-base">
+      <CardHeader className="text-center pb-3 sm:pb-4 pt-6 sm:pt-8">
+        <div className="flex items-center justify-center space-x-3 sm:space-x-4 mb-4 sm:mb-6">
+          <div className="w-14 h-14 sm:w-12 sm:h-12 md:w-16 md:h-16 relative">
+            <Image
+              src="/logos/logo-01.png"
+              alt="Disrupt Asia Logo"
+              width={80}
+              height={80}
+              className="object-contain scale-150 sm:scale-150"
+            />
+          </div>
+          <div className="block">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+              Disrupt <span className="text-red-600">Asia</span> 2025
+            </h2>
+            <p className="text-xs sm:text-sm font-bold text-cyan-600">Puzzle Challenge</p>
+          </div>
+        </div>
+        <CardDescription className="text-base mt-2">
           Select a mini-game to unlock piece ({piece.row + 1}, {piece.col + 1})
         </CardDescription>
       </CardHeader>
