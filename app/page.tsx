@@ -206,8 +206,12 @@ export default function HomePage() {
           
           setPuzzle(updatedPuzzle)
           
-          // Check if puzzle is completed and move to next
-          if (updatedPuzzle.completedAt && !puzzle.completedAt) {
+          // Check if puzzle is completed (either completedAt set or all pieces placed) and move to next
+          const completedCount = updatedPuzzle.pieces.filter(p => p.isPlaced).length
+          const isCompleteNow = !!updatedPuzzle.completedAt || (completedCount > 0 && completedCount === updatedPuzzle.pieces.length)
+          const wasCompleteBefore = !!puzzle.completedAt || (puzzle.pieces.filter(p => p.isPlaced).length === puzzle.pieces.length && puzzle.pieces.length > 0)
+
+          if (isCompleteNow && !wasCompleteBefore) {
             console.log('🎉 Puzzle completed! Moving to next puzzle...')
             // Small delay to ensure the completion modal shows first
             setTimeout(() => {

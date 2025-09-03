@@ -86,7 +86,10 @@ export default function QRCodesPage() {
 
   // Check for puzzle completion and move to next puzzle
   useEffect(() => {
-    if (puzzle && puzzle.completedAt) {
+    if (puzzle) {
+      const completedCount = puzzle.pieces.filter(p => p.isPlaced).length
+      const isComplete = !!puzzle.completedAt || (completedCount > 0 && completedCount === puzzle.pieces.length)
+      if (!isComplete) return
       console.log(`🎉 QR Codes - Puzzle "${puzzle.title}" completed, checking for next puzzle...`)
       console.log(`🎉 QR Codes - Current index: ${currentPuzzleIndex}, Total puzzles: ${allPuzzles.length}`)
       
@@ -145,7 +148,7 @@ export default function QRCodesPage() {
         }
       }
     }
-  }, [puzzle?.completedAt, currentPuzzleIndex, allPuzzles])
+  }, [puzzle, currentPuzzleIndex, allPuzzles])
 
   useEffect(() => {
     let unsubscribe = () => {}
