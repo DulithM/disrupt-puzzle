@@ -9,11 +9,6 @@ export interface IPuzzle extends Document {
   pieces: IPuzzlePiece[];
   unlockCode: string; // QR code identifier
   isUnlocked: boolean;
-  unlockedAt?: Date;
-  completedAt?: Date;
-  currentlyInUse?: boolean; // Server-controlled active rotation flag
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export interface IPuzzlePiece {
@@ -23,7 +18,6 @@ export interface IPuzzlePiece {
   imageUrl: string;
   isPlaced: boolean;
   unlockCode: string; // Each piece has its own QR code
-  unlockedAt?: Date;
   originalPosition: {
     row: number;
     col: number;
@@ -83,8 +77,6 @@ const PuzzleSchema = new Schema<IPuzzle>({
     default: false
   },
   unlockedAt: { type: Date },
-  completedAt: { type: Date },
-  currentlyInUse: { type: Boolean, default: false }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
@@ -94,7 +86,6 @@ const PuzzleSchema = new Schema<IPuzzle>({
 // Indexes for better query performance
 PuzzleSchema.index({ title: 'text' });
 PuzzleSchema.index({ createdAt: -1 });
-PuzzleSchema.index({ currentlyInUse: 1 });
 PuzzleSchema.index({ unlockCode: 1 });
 
 // Virtual for total pieces

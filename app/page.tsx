@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { puzzleApi } from "@/lib/puzzle-api"
 import type { Puzzle } from "@/lib/types"
 import { PuzzleBoard } from "@/components/puzzle-board"
-import { getActivePuzzleIdLocal, getActivePuzzleIndexLocal, onActivePuzzleChangeLocal, setActivePuzzleLocal } from "@/lib/puzzle-sync"
+import { getActivePuzzleIdLocal, getActivePuzzleIndexLocal, onActivePuzzleChangeLocal, setActivePuzzleLocal, getPuzzleState, onPuzzleStateChange, markPuzzleCompleted, isPuzzleCompleted, advanceToNextPuzzle, resetAllPuzzles } from "@/lib/puzzle-sync"
 
 export default function HomePage() {
   const [allPuzzles, setAllPuzzles] = useState<Puzzle[]>([])
@@ -34,28 +34,39 @@ export default function HomePage() {
             console.log(`  ${index + 1}. ${puzzle.title} (${puzzle.rows}x${puzzle.cols})`)
           })
           
-          // Get active and next puzzle from server
-          const activeNext = await puzzleApi.getActiveAndNext()
-          console.log('🎯 Main Page - Server returned active puzzle:', activeNext.active?.title)
+          // Get current puzzle from localStorage
+          const puzzleState = getPuzzleState()
+          const currentIndex = puzzleState.currentPuzzleIndex
+          console.log('🎯 Main Page - Current puzzle index from localStorage:', currentIndex)
           
-          if (activeNext.active) {
-            setPuzzle(activeNext.active)
+          if (currentIndex >= 0 && currentIndex < puzzles.length) {
+            const currentPuzzle = puzzles[currentIndex]
+            const puzzleId = currentPuzzle.id || (currentPuzzle as any)._id
             
-            // Find the index of the active puzzle in our local array
-            const activeIndex = puzzles.findIndex(p => 
-              (p.id || (p as any)._id) === (activeNext.active?.id || (activeNext.active as any)?._id)
-            )
-            
-            if (activeIndex !== -1) {
-              setCurrentPuzzleIndex(activeIndex)
-              console.log(`✅ Main Page - Active puzzle index: ${activeIndex + 1}/${puzzles.length}`)
-              
-              // Persist active selection for other pages
-              const activeId = activeNext.active.id || (activeNext.active as any)._id
-              if (activeId) setActivePuzzleLocal(activeId, activeIndex)
+            if (puzzleId) {
+              const loadedPuzzle = await puzzleApi.getPuzzle(puzzleId)
+              if (loadedPuzzle) {
+                setPuzzle(loadedPuzzle)
+                setCurrentPuzzleIndex(currentIndex)
+                console.log(`✅ Main Page - Loaded puzzle ${currentIndex + 1}/${puzzles.length}: ${loadedPuzzle.title}`)
+                
+                // Persist active selection for other pages
+                setActivePuzzleLocal(puzzleId, currentIndex)
+              }
             }
           } else {
-            setError("No active puzzle found. Please check the database.")
+            // Default to first puzzle if no state
+            const firstPuzzle = puzzles[0]
+            const firstPuzzleId = firstPuzzle.id || (firstPuzzle as any)._id
+            if (firstPuzzleId) {
+              const loadedPuzzle = await puzzleApi.getPuzzle(firstPuzzleId)
+              if (loadedPuzzle) {
+                setPuzzle(loadedPuzzle)
+                setCurrentPuzzleIndex(0)
+                console.log(`✅ Main Page - Defaulted to first puzzle: ${loadedPuzzle.title}`)
+                setActivePuzzleLocal(firstPuzzleId, 0)
+              }
+            }
           }
         } else {
           setError("No puzzles found. Please seed the database first.")
@@ -94,34 +105,35 @@ export default function HomePage() {
     return null
   }
 
-  // Simple completion handling - reset and go to next
+  // Handle puzzle completion using localStorage
   const handlePuzzleCompletion = async () => {
+    if (!puzzle) return
+    
+    const puzzleId = puzzle.id || (puzzle as any)._id
     console.log(`🎉 Main Page - Puzzle ${currentPuzzleIndex + 1}/${allPuzzles.length} completed!`)
     
     try {
-      const currentPuzzleId = puzzle?.id || (puzzle as any)?._id
+      // Mark puzzle as completed in localStorage
+      markPuzzleCompleted(puzzleId)
+      console.log(`✅ Main Page - Marked puzzle ${puzzleId} as completed in localStorage`)
       
-      // 1. Reset the completed puzzle
-      console.log('🔄 Main Page - Resetting completed puzzle...')
-      await puzzleApi.resetPuzzle(currentPuzzleId)
+      // Advance to next puzzle
+      const nextIndex = advanceToNextPuzzle(allPuzzles.length)
+      console.log(`🔄 Main Page - Advanced to puzzle index: ${nextIndex}`)
       
-      // 2. Go to next puzzle
-      const nextIndex = (currentPuzzleIndex + 1) % allPuzzles.length
-      console.log(`🔄 Main Page - Moving to puzzle ${nextIndex + 1}/${allPuzzles.length}`)
-      
-      const nextPuzzleData = allPuzzles[nextIndex]
-      const nextPuzzleId = nextPuzzleData.id || (nextPuzzleData as any)._id
-      
-      if (nextPuzzleId) {
-        const nextPuzzle = await puzzleApi.getPuzzle(nextPuzzleId)
-        if (nextPuzzle) {
-          setPuzzle(nextPuzzle)
-          setCurrentPuzzleIndex(nextIndex)
-          
-          // Notify other pages about the change
-          setActivePuzzleLocal(nextPuzzleId, nextIndex)
-          
-          console.log(`✅ Main Page - Now viewing: ${nextPuzzle.title}`)
+      // Load the next puzzle
+      if (nextIndex >= 0 && nextIndex < allPuzzles.length) {
+        const nextPuzzle = allPuzzles[nextIndex]
+        const nextPuzzleId = nextPuzzle.id || (nextPuzzle as any)._id
+        
+        if (nextPuzzleId) {
+          const loadedPuzzle = await puzzleApi.getPuzzle(nextPuzzleId)
+          if (loadedPuzzle) {
+            setPuzzle(loadedPuzzle)
+            setCurrentPuzzleIndex(nextIndex)
+            setActivePuzzleLocal(nextPuzzleId, nextIndex)
+            console.log(`✅ Main Page - Now viewing puzzle ${nextIndex + 1}/${allPuzzles.length}: ${loadedPuzzle.title}`)
+          }
         }
       }
     } catch (error) {
@@ -147,6 +159,7 @@ export default function HomePage() {
     console.log('🧪 Main Page - Testing manual puzzle advance...')
     handlePuzzleCompletion()
   }
+
 
   useEffect(() => {
     let unsubscribe = () => {}
@@ -253,13 +266,46 @@ export default function HomePage() {
       </div>
     )
   }
-
+0
   return (
     <div className="min-h-screen w-full overflow-hidden">
       {/* Puzzle Number Display - Bottom Right Corner */}
       <div className="fixed bottom-2 right-2 text-sm font-bold text-gray-600 z-10">
         {currentPuzzleIndex + 1}
       </div>
+      
+      {/* Test Buttons - Top Left Corner (for debugging) */}
+      <div className="fixed top-2 left-2 z-10 space-y-1">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={testAdvancePuzzle}
+          className="text-xs block"
+        >
+          Test Advance
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={async () => {
+            try {
+              const response = await fetch('/api/init-active-puzzle', { method: 'POST' });
+              const data = await response.json();
+              if (data.success) {
+                console.log('✅ Initialized active puzzle:', data.data.message);
+                window.location.reload();
+              }
+            } catch (error) {
+              console.error('❌ Failed to initialize active puzzle:', error);
+            }
+          }}
+          className="text-xs block"
+        >
+          Init Active
+        </Button>
+      </div>
+      
+      
       <PuzzleBoard puzzle={puzzle} />
     </div>
   )

@@ -12,21 +12,22 @@ export async function POST(
     
     const { id } = params
     
-    console.log(`🔄 Resetting puzzle ${id}`)
+    console.log(`🔄 Setting puzzle ${id} as active (currentlyInUse: true)`)
     
-    // Reset puzzle: set completed to false and reset all pieces to unplaced
+    // First, clear all currentlyInUse flags
+    const clearResult = await Puzzle.updateMany(
+      { currentlyInUse: true },
+      { $set: { currentlyInUse: false } },
+      { runValidators: false }
+    )
+    console.log(`🔄 Cleared currentlyInUse flags: ${clearResult.modifiedCount} modified`)
+    
+    // Then set the specified puzzle as active
     let updateResult = null
     if (mongoose.Types.ObjectId.isValid(id)) {
       updateResult = await Puzzle.updateOne(
         { _id: id },
-        { 
-          $set: { 
-            completed: false,
-            'pieces.$[].isPlaced': false,
-            'pieces.$[].placedBy': null,
-            'pieces.$[].placedAt': null
-          }
-        },
+        { $set: { currentlyInUse: true } },
         { runValidators: false }
       )
     }
@@ -35,14 +36,7 @@ export async function POST(
     if (!updateResult || updateResult.matchedCount === 0) {
       updateResult = await Puzzle.updateOne(
         { id: id },
-        { 
-          $set: { 
-            completed: false,
-            'pieces.$[].isPlaced': false,
-            'pieces.$[].placedBy': null,
-            'pieces.$[].placedAt': null
-          }
-        },
+        { $set: { currentlyInUse: true } },
         { runValidators: false }
       )
     }
@@ -54,24 +48,24 @@ export async function POST(
       )
     }
     
-    console.log(`✅ Puzzle ${id} reset: ${updateResult.modifiedCount} modified`)
+    console.log(`✅ Puzzle ${id} set as active: ${updateResult.modifiedCount} modified`)
     
     return NextResponse.json({
       success: true,
       data: { 
         puzzleId: id, 
-        completed: false,
-        piecesReset: true,
+        currentlyInUse: true,
         modifiedCount: updateResult.modifiedCount
       },
-      message: `Puzzle ${id} reset successfully`
+      message: `Puzzle ${id} set as active`
     })
     
   } catch (error) {
-    console.error('❌ Error resetting puzzle:', error)
+    console.error('❌ Error setting puzzle as active:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to reset puzzle' },
+      { success: false, error: 'Failed to set puzzle as active' },
       { status: 500 }
     )
   }
 }
+
