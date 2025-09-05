@@ -273,39 +273,6 @@ export default function HomePage() {
       <div className="fixed bottom-2 right-2 text-sm font-bold text-gray-600 z-10">
         {currentPuzzleIndex + 1}
       </div>
-      
-      {/* Test Buttons - Top Left Corner (for debugging) */}
-      <div className="fixed top-2 left-2 z-10 space-y-1">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={testAdvancePuzzle}
-          className="text-xs block"
-        >
-          Test Advance
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={async () => {
-            try {
-              const response = await fetch('/api/init-active-puzzle', { method: 'POST' });
-              const data = await response.json();
-              if (data.success) {
-                console.log('✅ Initialized active puzzle:', data.data.message);
-                window.location.reload();
-              }
-            } catch (error) {
-              console.error('❌ Failed to initialize active puzzle:', error);
-            }
-          }}
-          className="text-xs block"
-        >
-          Init Active
-        </Button>
-      </div>
-      
-      
       <PuzzleBoard puzzle={puzzle} />
     </div>
   )

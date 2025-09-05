@@ -35,9 +35,8 @@ const puzzleDataArray = [
     id: '1',
     title: 'Image 1',
     imageUrl: '/puzzles/DA-2016.jpg',
-    rows: 5,
-    cols: 5,
-    // isActive removed - using currentlyInUse instead
+    rows: 10,
+    cols: 10,
     unlockCode: 'image_1',
     isUnlocked: false
   },
@@ -45,9 +44,8 @@ const puzzleDataArray = [
     id: '2',
     title: 'Image 2',
     imageUrl: '/puzzles/DA-2017.jpg',
-    rows: 5,
-    cols: 5,
-    // isActive removed - using currentlyInUse instead
+    rows: 10,
+    cols: 10,
     unlockCode: 'image_2',
     isUnlocked: false
   },
@@ -55,9 +53,8 @@ const puzzleDataArray = [
     id: '3',
     title: 'Image 3',
     imageUrl: '/puzzles/DA-2018.jpg',
-    rows: 5,
-    cols: 5,
-    // isActive removed - using currentlyInUse instead
+    rows: 10,
+    cols: 10,
     unlockCode: 'image_3',
     isUnlocked: false
   },
@@ -65,9 +62,8 @@ const puzzleDataArray = [
     id: '4',
     title: 'Image 4',
     imageUrl: '/puzzles/DA-2019.jpg',
-    rows: 5,
-    cols: 5,
-    // isActive removed - using currentlyInUse instead
+    rows: 10,
+    cols: 10,
     unlockCode: 'image_4',
     isUnlocked: false
   }

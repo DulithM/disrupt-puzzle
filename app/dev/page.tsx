@@ -9,7 +9,7 @@ import { ArrowLeft, RotateCcw, QrCode, Smartphone, Target, Trophy, Zap } from "l
 import { puzzleApi } from "@/lib/puzzle-api"
 import type { Puzzle } from "@/lib/types"
 import { QRCodeGrid } from "@/components/qr-code-grid"
-import { setActivePuzzleLocal, onPuzzleCompleted, onActivePuzzleChangeLocal, getActivePuzzleIndexLocal, getPuzzleState, onPuzzleStateChange, markPuzzleCompleted, isPuzzleCompleted, advanceToNextPuzzle, resetAllPuzzles } from "@/lib/puzzle-sync"
+import { setActivePuzzleLocal, onPuzzleCompleted, onActivePuzzleChangeLocal, getActivePuzzleIndexLocal, getPuzzleState, markPuzzleCompleted, advanceToNextPuzzle } from "@/lib/puzzle-sync"
 
 export default function QRCodesPage() {
   const router = useRouter()
@@ -18,7 +18,6 @@ export default function QRCodesPage() {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isAdvancing, setIsAdvancing] = useState(false)
   const isAdvancingRef = useRef<boolean>(false)
 
   // Load all puzzles and find the current active one
@@ -191,67 +190,6 @@ export default function QRCodesPage() {
     }
   }, [puzzle, currentPuzzleIndex, allPuzzles])
 
-  // Manual advance function for when puzzle is completed
-  const manualAdvancePuzzle = async () => {
-    if (!puzzle) return
-    
-    setIsAdvancing(true)
-    try {
-      console.log('🔄 Manually advancing to next puzzle...')
-      
-      const currentPuzzleId = puzzle.id || (puzzle as any)._id
-      
-      // Check if this is the last puzzle (cycle reset)
-      const isLastPuzzle = currentPuzzleIndex === allPuzzles.length - 1
-      
-      if (isLastPuzzle) {
-        // Reset all puzzles and go back to puzzle 1
-        console.log('🔄 Last puzzle completed - resetting all puzzles...')
-        
-        // Reset all puzzles in localStorage
-        resetAllPuzzles()
-        console.log('✅ Reset all puzzles in localStorage')
-        
-        // Reset all puzzle pieces in database
-        for (const p of allPuzzles) {
-          const puzzleId = p.id || (p as any)._id
-          if (puzzleId) {
-            await fetch(`/api/puzzles/${puzzleId}/reset`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' }
-            })
-          }
-        }
-        
-        console.log('✅ Cycle reset complete - starting with puzzle 1')
-      } else {
-        // Normal advancement to next puzzle
-        const nextIndex = advanceToNextPuzzle(allPuzzles.length)
-        console.log(`🔄 Advanced to puzzle index: ${nextIndex}`)
-        
-        // Load the next puzzle
-        if (nextIndex >= 0 && nextIndex < allPuzzles.length) {
-          const nextPuzzle = allPuzzles[nextIndex]
-          const nextPuzzleId = nextPuzzle.id || (nextPuzzle as any)._id
-          
-          if (nextPuzzleId) {
-            const loadedPuzzle = await puzzleApi.getPuzzle(nextPuzzleId)
-            if (loadedPuzzle) {
-              setPuzzle(loadedPuzzle)
-              setCurrentPuzzleIndex(nextIndex)
-              setActivePuzzleLocal(nextPuzzleId, nextIndex)
-              console.log(`✅ Advanced to puzzle ${nextIndex + 1}/${allPuzzles.length}: ${loadedPuzzle.title}`)
-            }
-          }
-        }
-      }
-      
-    } catch (error) {
-      console.error('❌ Error manually advancing puzzle:', error)
-    } finally {
-      setIsAdvancing(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -363,44 +301,6 @@ export default function QRCodesPage() {
           </CardContent>
         </Card>
 
-        {/* Manual Advance Button - Shows when puzzle is completed */}
-        {(() => {
-          const completedPieces = puzzle.pieces.filter(p => p.isPlaced).length
-          const totalPieces = puzzle.pieces.length
-          const isCompleted = totalPieces > 0 && completedPieces === totalPieces
-          
-          if (isCompleted) {
-            return (
-              <div className="mb-6">
-                <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-green-600 mb-2">🎉 Puzzle Completed!</div>
-                    <div className="text-sm text-gray-600 mb-4">
-                      {puzzle.title} - {completedPieces}/{totalPieces} pieces
-                    </div>
-                    <Button 
-                      onClick={manualAdvancePuzzle}
-                      disabled={isAdvancing}
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      {isAdvancing ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Advancing...
-                        </>
-                      ) : (
-                        <>
-                          {currentPuzzleIndex === allPuzzles.length - 1 ? '🔄 Reset & Start Over' : '➡️ Next Puzzle'}
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )
-          }
-          return null
-        })()}
 
         {/* QR Code Grid */}
         <QRCodeGrid puzzle={puzzle} />
