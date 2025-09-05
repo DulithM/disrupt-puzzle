@@ -9,7 +9,7 @@ import { ArrowLeft, RotateCcw, QrCode, Smartphone, Target, Trophy, Zap } from "l
 import { puzzleApi } from "@/lib/puzzle-api"
 import type { Puzzle } from "@/lib/types"
 import { QRCodeGrid } from "@/components/qr-code-grid"
-import { setActivePuzzleLocal, onPuzzleCompleted, onActivePuzzleChangeLocal } from "@/lib/puzzle-sync"
+import { setActivePuzzleLocal, onPuzzleCompleted, onActivePuzzleChangeLocal, getActivePuzzleIndexLocal, getPuzzleState, onPuzzleStateChange, markPuzzleCompleted, isPuzzleCompleted, advanceToNextPuzzle, resetAllPuzzles } from "@/lib/puzzle-sync"
 
 export default function QRCodesPage() {
   const router = useRouter()
@@ -18,6 +18,7 @@ export default function QRCodesPage() {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isAdvancing, setIsAdvancing] = useState(false)
   const isAdvancingRef = useRef<boolean>(false)
 
   // Load all puzzles and find the current active one
@@ -40,28 +41,39 @@ export default function QRCodesPage() {
             console.log(`  ${index + 1}. ${puzzle.title} (${puzzle.rows}x${puzzle.cols})`)
           })
           
-          // Get active and next puzzle from server (uses currentlyInUse flag)
-          const activeNext = await puzzleApi.getActiveAndNext()
-          console.log('🎯 QR Codes - Server returned active puzzle:', activeNext.active?.title)
+          // Get current puzzle from localStorage
+          const puzzleState = getPuzzleState()
+          const currentIndex = puzzleState.currentPuzzleIndex
+          console.log('🎯 QR Codes - Current puzzle index from localStorage:', currentIndex)
           
-          if (activeNext.active) {
-            setPuzzle(activeNext.active)
+          if (currentIndex >= 0 && currentIndex < puzzles.length) {
+            const currentPuzzle = puzzles[currentIndex]
+            const puzzleId = currentPuzzle.id || (currentPuzzle as any)._id
             
-            // Find the index of the active puzzle in our local array
-            const activeIndex = puzzles.findIndex(p => 
-              (p.id || (p as any)._id) === (activeNext.active?.id || (activeNext.active as any)?._id)
-            )
-            
-            if (activeIndex !== -1) {
-              setCurrentPuzzleIndex(activeIndex)
-              console.log(`✅ QR Codes - Active puzzle index: ${activeIndex + 1}/${puzzles.length}`)
-              
-              // Persist active selection for other pages
-              const activeId = activeNext.active.id || (activeNext.active as any)._id
-              if (activeId) setActivePuzzleLocal(activeId, activeIndex)
+            if (puzzleId) {
+              const loadedPuzzle = await puzzleApi.getPuzzle(puzzleId)
+              if (loadedPuzzle) {
+                setPuzzle(loadedPuzzle)
+                setCurrentPuzzleIndex(currentIndex)
+                console.log(`✅ QR Codes - Loaded puzzle ${currentIndex + 1}/${puzzles.length}: ${loadedPuzzle.title}`)
+                
+                // Persist active selection for other pages
+                setActivePuzzleLocal(puzzleId, currentIndex)
+              }
             }
           } else {
-            setError("No active puzzle found. Please check the database.")
+            // Default to first puzzle if no state
+            const firstPuzzle = puzzles[0]
+            const firstPuzzleId = firstPuzzle.id || (firstPuzzle as any)._id
+            if (firstPuzzleId) {
+              const loadedPuzzle = await puzzleApi.getPuzzle(firstPuzzleId)
+              if (loadedPuzzle) {
+                setPuzzle(loadedPuzzle)
+                setCurrentPuzzleIndex(0)
+                console.log(`✅ QR Codes - Defaulted to first puzzle: ${loadedPuzzle.title}`)
+                setActivePuzzleLocal(firstPuzzleId, 0)
+              }
+            }
           }
         } else {
           setError("No puzzles found. Please seed the database first.")
@@ -77,7 +89,7 @@ export default function QRCodesPage() {
     loadPuzzles()
   }, [])
 
-  // Simple completion detection and advancement
+  // Handle puzzle completion using localStorage
   useEffect(() => {
     if (!puzzle) return
     
@@ -88,40 +100,35 @@ export default function QRCodesPage() {
     console.log(`🔍 QR Codes - Puzzle "${puzzle.title}": ${completedCount}/${totalPieces} pieces placed`)
     
     if (isComplete) {
-      console.log(`🎉 QR Codes - Puzzle "${puzzle.title}" completed! Resetting and advancing...`)
+      const puzzleId = puzzle.id || (puzzle as any)._id
+      console.log(`🎉 QR Codes - Puzzle "${puzzle.title}" completed!`)
       
-      // Simple approach: reset current puzzle and go to next
-      const handleCompletion = async () => {
-        try {
-          const currentPuzzleId = puzzle.id || (puzzle as any)._id
-          
-          // 1. Reset the completed puzzle
-          console.log('🔄 QR Codes - Resetting completed puzzle...')
-          await puzzleApi.resetPuzzle(currentPuzzleId)
-          
-          // 2. Go to next puzzle
-          const nextIndex = (currentPuzzleIndex + 1) % allPuzzles.length
-          console.log(`🔄 QR Codes - Moving to puzzle ${nextIndex + 1}/${allPuzzles.length}`)
-          
-          const nextPuzzleData = allPuzzles[nextIndex]
-          const nextPuzzleId = nextPuzzleData.id || (nextPuzzleData as any)._id
-          
-          if (nextPuzzleId) {
-            const nextPuzzle = await puzzleApi.getPuzzle(nextPuzzleId)
-            if (nextPuzzle) {
-              setPuzzle(nextPuzzle)
+      // Mark puzzle as completed in localStorage
+      markPuzzleCompleted(puzzleId)
+      console.log(`✅ QR Codes - Marked puzzle ${puzzleId} as completed in localStorage`)
+      
+      // Advance to next puzzle
+      const nextIndex = advanceToNextPuzzle(allPuzzles.length)
+      console.log(`🔄 QR Codes - Advanced to puzzle index: ${nextIndex}`)
+      
+      // Load the next puzzle
+      if (nextIndex >= 0 && nextIndex < allPuzzles.length) {
+        const nextPuzzle = allPuzzles[nextIndex]
+        const nextPuzzleId = nextPuzzle.id || (nextPuzzle as any)._id
+        
+        if (nextPuzzleId) {
+          puzzleApi.getPuzzle(nextPuzzleId).then((loadedPuzzle) => {
+            if (loadedPuzzle) {
+              setPuzzle(loadedPuzzle)
               setCurrentPuzzleIndex(nextIndex)
-              console.log(`✅ QR Codes - Now viewing: ${nextPuzzle.title}`)
+              setActivePuzzleLocal(nextPuzzleId, nextIndex)
+              console.log(`✅ QR Codes - Now viewing puzzle ${nextIndex + 1}/${allPuzzles.length}: ${loadedPuzzle.title}`)
             }
-          }
-        } catch (error) {
-          console.error('❌ QR Codes - Error handling completion:', error)
+          })
         }
       }
-      
-      handleCompletion()
     }
-  }, [puzzle, currentPuzzleIndex, allPuzzles])
+  }, [puzzle, allPuzzles])
 
   useEffect(() => {
     let unsubscribe = () => {}
@@ -184,6 +191,68 @@ export default function QRCodesPage() {
     }
   }, [puzzle, currentPuzzleIndex, allPuzzles])
 
+  // Manual advance function for when puzzle is completed
+  const manualAdvancePuzzle = async () => {
+    if (!puzzle) return
+    
+    setIsAdvancing(true)
+    try {
+      console.log('🔄 Manually advancing to next puzzle...')
+      
+      const currentPuzzleId = puzzle.id || (puzzle as any)._id
+      
+      // Check if this is the last puzzle (cycle reset)
+      const isLastPuzzle = currentPuzzleIndex === allPuzzles.length - 1
+      
+      if (isLastPuzzle) {
+        // Reset all puzzles and go back to puzzle 1
+        console.log('🔄 Last puzzle completed - resetting all puzzles...')
+        
+        // Reset all puzzles in localStorage
+        resetAllPuzzles()
+        console.log('✅ Reset all puzzles in localStorage')
+        
+        // Reset all puzzle pieces in database
+        for (const p of allPuzzles) {
+          const puzzleId = p.id || (p as any)._id
+          if (puzzleId) {
+            await fetch(`/api/puzzles/${puzzleId}/reset`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            })
+          }
+        }
+        
+        console.log('✅ Cycle reset complete - starting with puzzle 1')
+      } else {
+        // Normal advancement to next puzzle
+        const nextIndex = advanceToNextPuzzle(allPuzzles.length)
+        console.log(`🔄 Advanced to puzzle index: ${nextIndex}`)
+        
+        // Load the next puzzle
+        if (nextIndex >= 0 && nextIndex < allPuzzles.length) {
+          const nextPuzzle = allPuzzles[nextIndex]
+          const nextPuzzleId = nextPuzzle.id || (nextPuzzle as any)._id
+          
+          if (nextPuzzleId) {
+            const loadedPuzzle = await puzzleApi.getPuzzle(nextPuzzleId)
+            if (loadedPuzzle) {
+              setPuzzle(loadedPuzzle)
+              setCurrentPuzzleIndex(nextIndex)
+              setActivePuzzleLocal(nextPuzzleId, nextIndex)
+              console.log(`✅ Advanced to puzzle ${nextIndex + 1}/${allPuzzles.length}: ${loadedPuzzle.title}`)
+            }
+          }
+        }
+      }
+      
+    } catch (error) {
+      console.error('❌ Error manually advancing puzzle:', error)
+    } finally {
+      setIsAdvancing(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -232,6 +301,11 @@ export default function QRCodesPage() {
 
   return (
     <div className="min-h-screen">
+      {/* Puzzle Number Display - Top Right Corner */}
+      <div className="fixed top-2 right-2 text-sm font-bold text-gray-600 z-10 bg-white/80 px-2 py-1 rounded shadow-sm">
+        Puzzle {currentPuzzleIndex + 1}
+      </div>
+      
       <div className="container mx-auto px-4 py-4 sm:py-8">
         <div className="flex items-center justify-between mb-4 sm:mb-6">
           <Button variant="ghost" onClick={() => router.push("/")}>
@@ -288,6 +362,45 @@ export default function QRCodesPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Manual Advance Button - Shows when puzzle is completed */}
+        {(() => {
+          const completedPieces = puzzle.pieces.filter(p => p.isPlaced).length
+          const totalPieces = puzzle.pieces.length
+          const isCompleted = totalPieces > 0 && completedPieces === totalPieces
+          
+          if (isCompleted) {
+            return (
+              <div className="mb-6">
+                <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-green-600 mb-2">🎉 Puzzle Completed!</div>
+                    <div className="text-sm text-gray-600 mb-4">
+                      {puzzle.title} - {completedPieces}/{totalPieces} pieces
+                    </div>
+                    <Button 
+                      onClick={manualAdvancePuzzle}
+                      disabled={isAdvancing}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      {isAdvancing ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Advancing...
+                        </>
+                      ) : (
+                        <>
+                          {currentPuzzleIndex === allPuzzles.length - 1 ? '🔄 Reset & Start Over' : '➡️ Next Puzzle'}
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )
+          }
+          return null
+        })()}
 
         {/* QR Code Grid */}
         <QRCodeGrid puzzle={puzzle} />

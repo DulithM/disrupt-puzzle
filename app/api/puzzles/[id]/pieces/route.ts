@@ -138,26 +138,125 @@ export async function POST(
     const totalPieces = (refreshed.pieces || []).length;
     const allPiecesPlaced = totalPieces > 0 && completedPieces === totalPieces;
 
-    // If completed and no completedAt, set it in a separate update without validation
-    if (allPiecesPlaced && !refreshed.completedAt) {
-      let completionUpdateResult = null;
+    // If completed, set completed to true and advance to next puzzle
+    if (allPiecesPlaced) {
+      console.log('🎉 Puzzle completed! Starting automation...');
       
-      // Try to update by MongoDB ObjectId first
-      if (mongoose.Types.ObjectId.isValid(id)) {
-        completionUpdateResult = await Puzzle.updateOne(
-          { _id: id },
-          { $set: { completedAt: new Date() } },
-          { runValidators: false }
+      try {
+        // Set completed to true if not already completed
+        if (!refreshed.completed) {
+          let completionUpdateResult = null;
+          
+          // Try to update by MongoDB ObjectId first
+          if (mongoose.Types.ObjectId.isValid(id)) {
+            completionUpdateResult = await Puzzle.updateOne(
+              { _id: id },
+              { $set: { completed: true } },
+              { runValidators: false }
+            );
+          }
+          
+          // If not found by ObjectId, try to update by the 'id' field (string ID)
+          if (!completionUpdateResult || completionUpdateResult.matchedCount === 0) {
+            completionUpdateResult = await Puzzle.updateOne(
+              { id: id },
+              { $set: { completed: true } },
+              { runValidators: false }
+            );
+          }
+          console.log(`🎉 Set completed: ${completionUpdateResult?.modifiedCount || 0} modified`);
+        }
+        
+        // Get all puzzles in order
+        const allPuzzles = await Puzzle.find({}).lean();
+        const orderedPuzzles = [...allPuzzles].sort((a: any, b: any) => {
+          const aHasSeed = a.id && !isNaN(Number(a.id))
+          const bHasSeed = b.id && !isNaN(Number(b.id))
+          if (aHasSeed && bHasSeed) return Number(a.id) - Number(b.id)
+          if (aHasSeed) return -1
+          if (bHasSeed) return 1
+          const ad = new Date(a.createdAt || 0).getTime()
+          const bd = new Date(b.createdAt || 0).getTime()
+          return ad - bd
+        });
+
+        console.log(`📋 Found ${orderedPuzzles.length} puzzles in order`);
+
+        // Find current puzzle index
+        const currentIndex = orderedPuzzles.findIndex(p => 
+          String(p._id) === String(refreshed._id) || String(p.id) === String(refreshed.id)
         );
-      }
-      
-      // If not found by ObjectId, try to update by the 'id' field (string ID)
-      if (!completionUpdateResult || completionUpdateResult.matchedCount === 0) {
-        await Puzzle.updateOne(
-          { id: id },
-          { $set: { completedAt: new Date() } },
-          { runValidators: false }
-        );
+        
+        console.log(`🔍 Current puzzle index: ${currentIndex}`);
+        
+        if (currentIndex !== -1) {
+          // Calculate next puzzle index
+          const nextIndex = (currentIndex + 1) % orderedPuzzles.length;
+          
+          console.log(`🔍 Next puzzle index: ${nextIndex}`);
+          console.log(`🔍 Next puzzle: ${orderedPuzzles[nextIndex].title}`);
+          
+          // Check if this is the last puzzle in the cycle
+          const isLastPuzzle = nextIndex === 0;
+          
+          console.log(`🔍 Is last puzzle: ${isLastPuzzle}`);
+          
+          if (isLastPuzzle) {
+            // This is the last puzzle in the cycle, reset all puzzles
+            console.log('🔄 All puzzles completed! Resetting all puzzles for new cycle...');
+            
+            // Reset all puzzles: set completed to false and reset all pieces to unplaced
+            for (const puzzle of orderedPuzzles) {
+              const resetResult = await Puzzle.updateOne(
+                { _id: puzzle._id },
+                { 
+                  $set: { 
+                    completed: false,
+                    'pieces.$[].isPlaced': false,
+                    'pieces.$[].placedBy': null,
+                    'pieces.$[].placedAt': null
+                  }
+                },
+                { runValidators: false }
+              );
+              console.log(`🔄 Reset puzzle ${puzzle.title}: ${resetResult.modifiedCount} modified`);
+            }
+            
+            // Set the first puzzle as active
+            const clearResult = await Puzzle.updateMany({ currentlyInUse: true }, { $set: { currentlyInUse: false } });
+            console.log(`🔄 Cleared currentlyInUse flags: ${clearResult.modifiedCount} modified`);
+            
+            const setActiveResult = await Puzzle.updateOne(
+              { _id: orderedPuzzles[0]._id }, 
+              { $set: { currentlyInUse: true } }
+            );
+            console.log(`🔄 Set puzzle 1 as active: ${setActiveResult.modifiedCount} modified`);
+            
+            console.log(`✅ Cycle complete! Reset all puzzles and started new cycle with puzzle 1`);
+          } else {
+            // Normal advancement to next puzzle
+            console.log(`🔄 Advancing from puzzle ${currentIndex + 1} to puzzle ${nextIndex + 1}...`);
+            
+            // Clear all currentlyInUse flags and set the next one
+            const clearResult = await Puzzle.updateMany({ currentlyInUse: true }, { $set: { currentlyInUse: false } });
+            console.log(`🔄 Cleared currentlyInUse flags: ${clearResult.modifiedCount} modified`);
+            
+            const setActiveResult = await Puzzle.updateOne(
+              { _id: orderedPuzzles[nextIndex]._id }, 
+              { $set: { currentlyInUse: true } }
+            );
+            console.log(`🔄 Set puzzle ${nextIndex + 1} as active: ${setActiveResult.modifiedCount} modified`);
+            
+            console.log(`✅ Advanced from puzzle ${currentIndex + 1} to puzzle ${nextIndex + 1}`);
+          }
+        } else {
+          console.log('❌ Could not find current puzzle index for automation');
+        }
+      } catch (error) {
+        console.error('❌ Error in automation logic:', error);
+        console.error('❌ Error details:', error.message);
+        console.error('❌ Error stack:', error.stack);
+        // Don't throw the error, just log it so the piece placement still succeeds
       }
     }
 

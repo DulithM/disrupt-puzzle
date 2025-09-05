@@ -11,22 +11,17 @@ export async function POST(
     await connectDB()
     
     const { id } = params
+    const body = await request.json()
+    const { completed } = body
     
-    console.log(`🔄 Resetting puzzle ${id}`)
+    console.log(`🔄 Setting puzzle ${id} completed to ${completed}`)
     
-    // Reset puzzle: set completed to false and reset all pieces to unplaced
+    // Try to update by MongoDB ObjectId first
     let updateResult = null
     if (mongoose.Types.ObjectId.isValid(id)) {
       updateResult = await Puzzle.updateOne(
         { _id: id },
-        { 
-          $set: { 
-            completed: false,
-            'pieces.$[].isPlaced': false,
-            'pieces.$[].placedBy': null,
-            'pieces.$[].placedAt': null
-          }
-        },
+        { $set: { completed: completed } },
         { runValidators: false }
       )
     }
@@ -35,14 +30,7 @@ export async function POST(
     if (!updateResult || updateResult.matchedCount === 0) {
       updateResult = await Puzzle.updateOne(
         { id: id },
-        { 
-          $set: { 
-            completed: false,
-            'pieces.$[].isPlaced': false,
-            'pieces.$[].placedBy': null,
-            'pieces.$[].placedAt': null
-          }
-        },
+        { $set: { completed: completed } },
         { runValidators: false }
       )
     }
@@ -54,23 +42,22 @@ export async function POST(
       )
     }
     
-    console.log(`✅ Puzzle ${id} reset: ${updateResult.modifiedCount} modified`)
+    console.log(`✅ Puzzle ${id} completed set to ${completed}: ${updateResult.modifiedCount} modified`)
     
     return NextResponse.json({
       success: true,
       data: { 
         puzzleId: id, 
-        completed: false,
-        piecesReset: true,
+        completed: completed,
         modifiedCount: updateResult.modifiedCount
       },
-      message: `Puzzle ${id} reset successfully`
+      message: `Puzzle ${id} completed set to ${completed}`
     })
     
   } catch (error) {
-    console.error('❌ Error resetting puzzle:', error)
+    console.error('❌ Error setting puzzle completed:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to reset puzzle' },
+      { success: false, error: 'Failed to set puzzle completed' },
       { status: 500 }
     )
   }

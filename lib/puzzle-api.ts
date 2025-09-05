@@ -136,8 +136,7 @@ export const puzzleApi = {
       // Check if we're using mock data
       const isMockData = typeof targetPuzzleId === 'string' && (
         targetPuzzleId.startsWith('mock-') || 
-        targetPuzzleId.startsWith('piece-') ||
-        targetPuzzleId.length < 10
+        targetPuzzleId.startsWith('piece-')
       )
       
       if (isMockData) {
