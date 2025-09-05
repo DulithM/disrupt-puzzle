@@ -8,7 +8,7 @@ import { ArrowLeft, CheckCircle, Target, AlertTriangle } from "lucide-react"
 import { puzzleApi } from "@/lib/puzzle-api"
 import type { PuzzlePiece, Puzzle } from "@/lib/types"
 import { GameManager } from "@/components/mini-games/game-manager"
-import { getActivePuzzleIdLocal, getActivePuzzleIndexLocal, onActivePuzzleChangeLocal } from "@/lib/puzzle-sync"
+import { getActivePuzzleIdLocal, getActivePuzzleIndexLocal, onActivePuzzleChangeLocal, getPuzzleState } from "@/lib/puzzle-sync"
 import Image from "next/image"
 
 export default function PiecePage() {
@@ -23,7 +23,6 @@ export default function PiecePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [puzzleCompleted, setPuzzleCompleted] = useState(false)
   const [pieceSubmitted, setPieceSubmitted] = useState(false)
 
   // Load all puzzles and find current active puzzle using the same method as other pages
@@ -49,22 +48,15 @@ export default function PiecePage() {
         
         setAllPuzzles(puzzles)
         
-        // Use the same method as other pages: getActiveAndNext()
-        const activeNext = await puzzleApi.getActiveAndNext()
-        console.log('🎯 Piece Page - Server returned active puzzle:', activeNext.active?.title)
-        console.log('🎯 Piece Page - Server returned next puzzle:', activeNext.next?.title)
+        // Get current active puzzle from localStorage
+        const puzzleState = getPuzzleState()
+        const currentIndex = puzzleState.currentPuzzleIndex
+        console.log('🎯 Piece Page - Current puzzle index from localStorage:', currentIndex)
         
-        if (activeNext.active) {
-          setCurrentActivePuzzle(activeNext.active)
-          
-          // Find the index of the active puzzle in our local array
-          const activeIndex = puzzles.findIndex(p => 
-            (p.id || (p as any)._id) === (activeNext.active?.id || (activeNext.active as any)?._id)
-          )
-          
-          if (activeIndex !== -1) {
-            console.log(`✅ Piece Page - Active puzzle index: ${activeIndex + 1}/${puzzles.length}`)
-          }
+        if (currentIndex >= 0 && currentIndex < puzzles.length) {
+          const currentPuzzle = puzzles[currentIndex]
+          setCurrentActivePuzzle(currentPuzzle)
+          console.log(`✅ Piece Page - Current active puzzle: ${currentPuzzle.title} (${currentIndex + 1}/${puzzles.length})`)
         } else {
           setError("No active puzzle found")
           return
@@ -155,28 +147,8 @@ export default function PiecePage() {
           console.log('🔍 Piece Page - Found piece in puzzle:', foundPuzzle.title, 'ID:', foundPuzzle.id || (foundPuzzle as any)._id)
           console.log('🔍 Piece Page - Piece details:', foundPiece)
           
-          // Check if this piece belongs to the current active puzzle
-          // A piece is playable if it belongs to the current active puzzle
-          const foundPuzzleId = foundPuzzle.id || (foundPuzzle as any)._id
-          const activePuzzleId = activeNext.active?.id || (activeNext.active as any)?._id
-          
-          console.log('🔍 Piece Page - Comparing puzzle IDs:', { foundPuzzleId, activePuzzleId })
-          console.log('🔍 Piece Page - Found puzzle flags:', { 
-            isActive: (foundPuzzle as any).isActive, 
-            currentlyInUse: (foundPuzzle as any).currentlyInUse 
-          })
-          console.log('🔍 Piece Page - Active puzzle flags:', { 
-            isActive: (activeNext.active as any).isActive, 
-            currentlyInUse: (activeNext.active as any).currentlyInUse 
-          })
-          
-          if (foundPuzzleId === activePuzzleId) {
-            console.log('🔍 Piece Page - Piece belongs to active puzzle, allowing play')
-            setPuzzleCompleted(false)
-          } else {
-            console.log('🔍 Piece Page - Piece belongs to different puzzle, marking as completed')
-            setPuzzleCompleted(true)
-          }
+          // Always allow play - any piece can be filled when scanned
+          console.log('🔍 Piece Page - Piece found, allowing play regardless of puzzle')
         } else {
           setError("Piece not found in any puzzle")
         }
@@ -371,41 +343,6 @@ export default function PiecePage() {
     )
   }
 
-  // Show warning if piece belongs to completed/inactive puzzle
-  if (puzzleCompleted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-2 sm:p-4 bg-gradient-to-br from-cyan-100 via-white to-orange-100">
-        <Card className="w-full max-w-xs sm:max-w-sm">
-          <CardHeader className="text-center pb-3 sm:pb-4 pt-6 sm:pt-8">
-            <div className="flex items-center justify-center space-x-3 sm:space-x-4 mb-4 sm:mb-6">
-              <div className="w-14 h-14 sm:w-12 sm:h-12 md:w-16 md:h-16 relative">
-                <Image
-                  src="/logos/logo-01.png"
-                  alt="Disrupt Asia Logo"
-                  width={80}
-                  height={80}
-                  className="object-contain scale-150 sm:scale-150"
-                />
-              </div>
-              <div className="block">
-                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
-                  Disrupt <span className="text-red-600">Asia</span> 2025
-                </h2>
-                <p className="text-xs sm:text-sm font-bold text-cyan-600">Puzzle Challenge</p>
-              </div>
-            </div>
-            <div className="flex items-center justify-center gap-2 text-orange-600 text-base sm:text-lg mt-2">
-              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span>This piece belongs to a completed puzzle.</span>
-            </div>
-            <CardDescription className="text-sm mt-2">
-              Current active puzzle: <strong>{currentActivePuzzle?.title || 'Unknown'}</strong>
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    )
-  }
 
   // Only redirect if piece is placed AND we're not showing the success state
   if (piece.isPlaced && !pieceSubmitted) {
